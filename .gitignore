@@ -1,0 +1,19 @@
+*.sif
+*.egg-info
+*egg
+*ipynb_checkpoints*
+*.pyc
+*__pycache__*
+*build*
+# Ignoriere alle .csv Dateien
+*.csv
+*.h5 
+
+# Ignoriere spezifische Dateien
+.adoptodevenv
+.myvenv
+
+# Ignoriere Verzeichnisse
+data/
+figures/
+adode_cluster

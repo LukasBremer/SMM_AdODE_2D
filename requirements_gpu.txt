@@ -1,0 +1,24 @@
+# external requirements
+matplotlib
+numpy
+scipy
+iniconfig
+pluggy
+py
+toml
+requests
+lxml
+flask
+markdown
+urllib3
+trio
+notebook
+jaxlib
+argparse
+h5py
+subprocess.run
+progressbar
+
+-f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html "jax[cuda12_pip]"
+# local package
+.
