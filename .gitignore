@@ -16,4 +16,5 @@
 # Ignoriere Verzeichnisse
 data/
 figures/
-adode_cluster
+*data/
+*figures/
