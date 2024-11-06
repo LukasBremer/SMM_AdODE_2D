@@ -60,7 +60,7 @@ def axial_force_p(x, x_j, x_cm, params):
     local_force = jnp.zeros(2)
     eta = params['eta']
     k_p = params['k_p']
-    l_ax = params['l_ax']
+    l_ax = ((params['eta']-1/2)**2+1/2**2)**(1/2)
 
     q_j = interpolate_q_p(x_j, x, eta)
 
