@@ -38,7 +38,7 @@ import scipy.interpolate
 def total_force(x, x_j, x_cm, l_a, t, params):
     """defines the total force of the system"""
     f = jnp.zeros(2)
-    f = grid_force(x, x_j, params) + axial_force_a(x, x_j, x_cm, l_a, params) + axial_force_p(x, x_j, x_cm, params)
+    f = grid_force(x, x_j, params) + axial_force_a(x, x_j, x_cm,l_a, params) + axial_force_p(x, x_j, x_cm, params)
     return f
 
 @jit
@@ -60,19 +60,19 @@ def axial_force_p(x, x_j, x_cm, params):
     local_force = jnp.zeros(2)
     eta = params['eta']
     k_p = params['k_p']
-    l_p = params['l_p']
+    l_ax = params['l_ax']
 
     q_j = interpolate_q_p(x_j, x, eta)
 
-    local_force += f_ij(q_j[0,:], x_cm[0,:], k_p, l_p)*(1-eta)
-    local_force += f_ij(q_j[1,:], x_cm[3,:], k_p, l_p)*(eta)
-    local_force += f_ij(q_j[2,:], x_cm[1,:], k_p, l_p)*(eta)
-    local_force += f_ij(q_j[3,:], x_cm[2,:], k_p, l_p)*(1-eta)
+    local_force += f_ij(q_j[0,:], x_cm[0,:], k_p, l_ax)*(1-eta)
+    local_force += f_ij(q_j[1,:], x_cm[3,:], k_p, l_ax)*(eta)
+    local_force += f_ij(q_j[2,:], x_cm[1,:], k_p, l_ax)*(eta)
+    local_force += f_ij(q_j[3,:], x_cm[2,:], k_p, l_ax)*(1-eta)
 
     return local_force
     
 @jit 
-def axial_force_a(x, x_j, x_cm,l_a, params):
+def axial_force_a(x, x_j, x_cm, l_a, params):
     """defines the force that is given by the passive axial springs of the system"""
     local_force = jnp.zeros(2)
     eta = params['eta']
