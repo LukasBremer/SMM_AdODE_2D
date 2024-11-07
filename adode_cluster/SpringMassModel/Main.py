@@ -20,38 +20,42 @@ i = int(sys.argv[1])
 j = int(sys.argv[2])
 nr = int(sys.argv[3])
 
-T_standard = [1,2,3,4,5]
-print('start threshold 5e-7')
+T_standard = [1,2,3,4,5,6,7,8,9,10]
+print('start threshold 1e-7')
 
-max_shift = 0
+
+max_indx = 0
 for _ in range(1):
     control = False
-    for k in range(2,3):
-        print(k)
+    for k in range(10):
+        print('Peak',T_standard[k])
         result = subprocess.run(['python3', 'SinglePeakModel.py', str(i), str(j), str(k), str(T_standard[k]),str(nr),str(max_indx)], capture_output=True, text=True)
-        max_indx = result.returncode
-        print('maxindx',max_indx)
         print(result.stdout)
         loss = np.load('../data/SpringMassModel/EtaSweep/eta_sweep'+str(nr)+'.npy')[i,j,k,1]
-        print(result.stdout)
-        eta_temp = np.load('../data/SpringMassModel/EtaSweep/eta_sweep'+str(nr)+'.npy')[i, j, :, 0]
-        eta_temp[np.isnan(eta_temp)] = 0
 
-        is_all_zero = np.all(eta_temp == np.array([0, 0, 0, 0, 0]))
-        is_all_one = np.all(eta_temp == np.array([1.0, 1.0, 1.0, 1.0, 1.0]))
-        
-        for i in range(5):
-            max_indx += 1
-            result = subprocess.run(['python3', 'SinglePeakModel.py', str(i), str(j), str(k), str(T_standard[k]),str(nr),str(max_indx)], capture_output=True, text=True)
-            max_indx = result.returncode
-            if loss < 5e-7:
-                print('success',loss,T_standard[k])
-                control = True
-                break
-        
-        if loss < 5e-7:
+        if loss < 1e-7:
             print('success',loss,T_standard[k])
             control = True
+
+    max_indx = result.returncode
+    eta_temp = np.load('../data/SpringMassModel/EtaSweep/eta_sweep'+str(nr)+'.npy')[i, j, :, 0]
+    eta_temp[np.isnan(eta_temp)] = 1.1
+    is_all_zero = np.all(eta_temp == np.full(10,1.1))    
+
+    if is_all_zero or not control:    
+        print('start correction loop')
+        for shift in range(3):
+            for k in range(10):
+                result = subprocess.run(['python3', 'SinglePeakModel.py', str(i), str(j), str(k), str(T_standard[k]),str(nr),str(max_indx+ 2* shift + 1)], capture_output=True, text=True)
+                print(f"start at {max_indx} + {shift} * 2", result.stdout)
+                loss = np.load('../data/SpringMassModel/EtaSweep/eta_sweep'+str(nr)+'.npy')[i,j,k,1]
+                if loss < 1e-7:
+                    print('success',loss,T_standard[k])
+                    control = True
+            if control:
+                break
+        if control:
+            break
         
     if control:
         break
