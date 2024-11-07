@@ -58,22 +58,17 @@ def grid_force(x,x_j,params):
 def axial_force_p(x, x_j, x_cm, params):
     """defines the force that is given by the active axial springs of the system"""
     local_force = jnp.zeros(2)
-    eta0 = params['eta0']
-    eta1 = params['eta1']
-    eta2 = params['eta2']
-    eta3 = params['eta3']
-    
-    eta_arr = jnp.array([eta0, eta3, eta1, eta2])
+    eta = params['eta']
 
     k_p = params['k_p']
     l_p = params['l_p']
 
-    q_j = interpolate_q_p(x_j, x, eta_arr)
+    q_j = interpolate_q_p(x_j, x, eta)
 
-    local_force += f_ij(q_j[0,:], x_cm[0,:], k_p, l_p)*(1-eta0)
-    local_force += f_ij(q_j[1,:], x_cm[3,:], k_p, l_p)*(eta3)
-    local_force += f_ij(q_j[2,:], x_cm[1,:], k_p, l_p)*(eta1)
-    local_force += f_ij(q_j[3,:], x_cm[2,:], k_p, l_p)*(1-eta2)
+    local_force += f_ij(q_j[0,:], x_cm[0,:], k_p, l_p)*(1-eta)
+    local_force += f_ij(q_j[1,:], x_cm[3,:], k_p, l_p)*(eta)
+    local_force += f_ij(q_j[2,:], x_cm[1,:], k_p, l_p)*(eta)
+    local_force += f_ij(q_j[3,:], x_cm[2,:], k_p, l_p)*(1-eta)
 
     return local_force
     
@@ -81,19 +76,16 @@ def axial_force_p(x, x_j, x_cm, params):
 def axial_force_a(x, x_j, x_cm,l_a, params):
     """defines the force that is given by the passive axial springs of the system"""
     local_force = jnp.zeros(2)
-    eta0 = params['eta0']
-    eta1 = params['eta1']
-    eta2 = params['eta2']
-    eta3 = params['eta3']
-    eta_arr = jnp.array([eta1, eta0, eta2, eta3])
+    eta = params['eta']
+    
     k_a = params['k_a']
     
-    q_j = interpolate_q_a(x_j, x, eta_arr)
+    q_j = interpolate_q_a(x_j, x, eta)
 
-    local_force += f_ij(q_j[0,:], x_cm[1,:], k_a, l_a[1])*(1-eta1)
-    local_force += f_ij(q_j[1,:], x_cm[0,:], k_a, l_a[0])*(eta0)
-    local_force += f_ij(q_j[2,:], x_cm[2,:], k_a, l_a[2])*(eta2)
-    local_force += f_ij(q_j[3,:], x_cm[3,:], k_a, l_a[3])*(1-eta2)
+    local_force += f_ij(q_j[0,:], x_cm[1,:], k_a, l_a[1])*(1-eta)
+    local_force += f_ij(q_j[1,:], x_cm[0,:], k_a, l_a[0])*(eta)
+    local_force += f_ij(q_j[2,:], x_cm[2,:], k_a, l_a[2])*(eta)
+    local_force += f_ij(q_j[3,:], x_cm[3,:], k_a, l_a[3])*(1-eta)
 
     return local_force
 
@@ -102,10 +94,10 @@ def interpolate_q_a(x_j, x, eta):
     """interpolates the intersection point of the axial springs q"""
     q = jnp.zeros((4,2))
     
-    q = q.at[0,:].set(x + (x_j[0,:]-x) * eta[0])
-    q = q.at[1,:].set(x + (x_j[0,:]-x) * (1-eta[1]))
-    q = q.at[2,:].set(x + (x_j[2,:]-x) * (1-eta[2]))
-    q = q.at[3,:].set(x + (x_j[2,:]-x) * eta[3]) 
+    q = q.at[0,:].set(x + (x_j[0,:]-x) * eta)
+    q = q.at[1,:].set(x + (x_j[0,:]-x) * (1-eta))
+    q = q.at[2,:].set(x + (x_j[2,:]-x) * (1-eta))
+    q = q.at[3,:].set(x + (x_j[2,:]-x) * eta) 
 
     return q
 
@@ -114,10 +106,10 @@ def interpolate_q_p(x_j, x, eta):
     """interpolates the intersection point of the axial springs q"""
     q = jnp.zeros((4,2))
 
-    q = q.at[0,:].set(x + (x_j[3,:]-x) * eta[0])
-    q = q.at[1,:].set(x + (x_j[3,:]-x) * (1-eta[1]))
-    q = q.at[2,:].set(x + (x_j[1,:]-x) * (1-eta[2]))
-    q = q.at[3,:].set(x + (x_j[1,:]-x) * eta[3])
+    q = q.at[0,:].set(x + (x_j[3,:]-x) * eta)
+    q = q.at[1,:].set(x + (x_j[3,:]-x) * (1-eta))
+    q = q.at[2,:].set(x + (x_j[1,:]-x) * (1-eta))
+    q = q.at[3,:].set(x + (x_j[1,:]-x) * eta)
     
         
     return q
