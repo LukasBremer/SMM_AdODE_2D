@@ -6,6 +6,8 @@ import progressbar
 import scipy
 from jax import jit
 import jax.numpy as jnp
+from scipy.ndimage import gaussian_filter1d
+
 
 def read_config(variables, mode='chaos',file='config.ini'):
     config = configparser.ConfigParser()
@@ -87,6 +89,15 @@ def shape_input_for_adoptode(x, x_cm, T_a, i, j,l_a0):
 
     x_i = x[:,:,i,j]
     x_j = np.array([x[:,:,i-1,j], x[:,:,i,j+1], x[:,:,i+1,j], x[:,:,i,j-1] ])
+
+    for k in range(4):
+        x_j[k][:,0] = gaussian_filter1d(x_j[k][:,0], sigma=5)
+        x_j[k][:,1] = gaussian_filter1d(x_j[k][:,1], sigma=5)
+        x_cm_i[k][:,0] = gaussian_filter1d(x_cm_i[k][:,0], sigma=5)
+        x_cm_i[k][:,1] = gaussian_filter1d(x_cm_i[k][:,1], sigma=5)
+    x_i[:,0] = gaussian_filter1d(x_i[:,0], sigma=5)
+    x_i[:,1] = gaussian_filter1d(x_i[:,1], sigma=5)
+
     return x_i,x_j, x_cm_i,l_a_i
 
 @jit
