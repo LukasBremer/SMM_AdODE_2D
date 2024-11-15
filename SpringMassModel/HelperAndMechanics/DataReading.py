@@ -53,7 +53,7 @@ def read_vector(file,shape_of_data):
     i,j,k,t_n=0,0,0,0
     data = np.empty(shape_of_data)
     print("shape of data: ",data.shape)
-
+    
     bar = progressbar.ProgressBar(maxval=N, left_justify=True)
     bar.start()
 
