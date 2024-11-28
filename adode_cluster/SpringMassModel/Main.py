@@ -25,7 +25,7 @@ print('start threshold 1e-7')
 
 
 max_indx = 0
-for _ in range(1):
+for _ in range(2):
     control = False
     for k in range(10):
         print('Peak',T_standard[k])
@@ -47,7 +47,7 @@ for _ in range(1):
         for shift in range(3):
             for k in range(10):
                 result = subprocess.run(['python3', 'SinglePeakModel.py', str(i), str(j), str(k), str(T_standard[k]),str(nr),str(max_indx+ 2* shift + 1)], capture_output=True, text=True)
-                print(f"start at {max_indx} + {shift} * 2", result.stdout)
+                print(f"start at {max_indx} + {shift} * 2", result.stdout,T_standard[k])
                 loss = np.load('../data/SpringMassModel/EtaSweep/eta_sweep'+str(nr)+'.npy')[i,j,k,1]
                 if loss < 1e-7:
                     print('success',loss,T_standard[k])

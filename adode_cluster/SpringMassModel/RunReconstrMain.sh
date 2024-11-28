@@ -7,10 +7,14 @@
 #SBATCH --mem=10G
 #SBATCH -a 0-99
 
-i=$((SLURM_ARRAY_TASK_ID / 10))
-j=$((SLURM_ARRAY_TASK_ID % 10))
-k=7
+i=20
+j=50
+arr_i=$((SLURM_ARRAY_TASK_ID / 10))
+arr_j=$((SLURM_ARRAY_TASK_ID % 10))
+no_dt=$((5 + arr_i * 2))
+no_points=$((5 + arr_j * 2))
+dt=$((500 / no_dt))
 
 module load python 
 source ../.venv/bin/activate
-python Main.py $i $j $k
+python NNRecMain.py $i $j $no_dt $dt $no_points $arr_i $arr_j 
