@@ -59,6 +59,7 @@ for t in range(4):
     T_fit_raw = T[t_start_fit:t_stop_fit,i,j]
     start_loss = int((t_stop_fit - t_start_fit - 1000)/2)
     stop_loss = start_loss + 1000
+    
     #initialize hyperparameters
     no_dt,no_points,dt = args.no_dt,args.no_points,args.dt
     #shape data and train the model
