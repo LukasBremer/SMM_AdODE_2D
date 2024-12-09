@@ -18,8 +18,6 @@ import sys
 parser = argparse.ArgumentParser()
 parser.add_argument('i', type=int)
 parser.add_argument('j', type=int)
-parser.add_argument('k', type=int)
-parser.add_argument('peak', type=str)
 parser.add_argument('nr', type=str)
 parser.add_argument('start_indx',type=int)
 # Parse the arguments
@@ -140,7 +138,7 @@ delta_t = delta_t_m * it_m
 t_evals = np.linspace(0,N*delta_t,N)
 N_interp = int(it_m)*5
 
-# T_arr = np.array([T[:,i-1,j-1],T[:,i-1,j],T[:,i,j],T[:,i,j-1]])
+T_arr = np.array([T[:,i-1,j-1],T[:,i-1,j],T[:,i,j],T[:,i,j-1]])
 # dA_arr = np.array([dA[:,i-1,j-1],dA[:,i-1,j],dA[:,i,j],dA[:,i,j-1]])
 # t_peak_start = np.array([])
 # t_peak_stop = np.array([])
@@ -262,15 +260,16 @@ kwargs_adoptODE = {'lr':.9e-2, 'epochs':1000,'N_backups':1,
                    'upper_b': real_params_up}
 
 
-dataset = dataset_adoptODE(sm_model,
+
+loss=1
+for _ in range(3):
+    dataset = dataset_adoptODE(sm_model,
                                 targets,
                                 t_evals, 
                                 kwargs_sys,
                                 kwargs_adoptODE, 
                                 true_params = real_params
                                 )
-loss=1
-for _ in range(3):
     params_final, losses, errors, params_history = train_adoptODE(dataset,save_interval=100)
     eta_local = np.array([float(dataset.params_train['eta0']),float(dataset.params_train['eta1']),float(dataset.params_train['eta2']),float(dataset.params_train['eta3'])])
     eta_arr = np.load('../data/SpringMassModel/EtaSweep/eta_sweep'+args.nr+'.npy')
@@ -282,4 +281,4 @@ for _ in range(3):
 
     np.save('../data/SpringMassModel/EtaSweep/eta_sweep'+args.nr+'.npy',eta_arr)
     print(losses[-1][0], eta_local)
-    sys.exit(int(max_indx))
+    # sys.exit(int(max_indx))
