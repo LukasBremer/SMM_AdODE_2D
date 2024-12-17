@@ -12,6 +12,7 @@
 # Ignoriere spezifische Dateien
 .adoptodevenv
 .myvenv
+.venv
 
 # Ignoriere Verzeichnisse
 data/
