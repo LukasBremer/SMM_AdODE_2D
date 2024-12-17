@@ -9,8 +9,9 @@
 
 i=$((SLURM_ARRAY_TASK_ID / 10))
 j=$((SLURM_ARRAY_TASK_ID % 10))
-k=7
+start_indx=0
+nr='RecSweep'
 
 module load python 
 source ../.venv/bin/activate
-python Main.py $i $j $k
+python Main.py $i $j $nr $start_indx
