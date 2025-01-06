@@ -264,8 +264,8 @@ for _ in range(3):
     eta_arr = np.load('../data/SpringMassModel/EtaSweep/eta_sweep'+args.nr+'.npy')
     
     if float(losses[-1][0]) < loss:
-        eta_arr[args.i,args.j,:,0] = eta_local
-        eta_arr[args.i,args.j,:,1] = float(losses[-1][0])
+        eta_arr[args.i,args.j,0] = dataset.params_train
+        eta_arr[args.i,args.j,1] = float(losses[-1][0])
         loss = float(losses[-1][0])
 
     np.save('../data/SpringMassModel/EtaSweep/eta_sweep'+args.nr+'.npy',eta_arr)
