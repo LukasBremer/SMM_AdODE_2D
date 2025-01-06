@@ -114,9 +114,8 @@ def sm_model(**kwargs_sys):
 
     return eom, loss, gen_params, gen_y0, {}
 
-
 # Load from HDF5
-with h5py.File('../data/SpringMassModel/MechanicalData/data_eta_var_l.h5', 'r') as f:
+with h5py.File('../data/SpringMassModel/MechanicalData/data_eta_var_xl.h5', 'r') as f:
     x_temp = f['x_temp'][:]
     x_cm_temp = f['x_cm_temp'][:]
     T = f['T'][:]
@@ -125,6 +124,7 @@ with h5py.File('../data/SpringMassModel/MechanicalData/data_eta_var_l.h5', 'r') 
 print('loaded data')
 
 N,size,ls = read_config(["l_0","c_a","k_ij","k_j","k_a","m","c_damp","n_0","delta_t_m","it_m","pad"])
+N = T.shape[0]
 l_0, c_a0, k_g0, k_p0, k_a0, m0, nu0, eta0, delta_t_m, it_m, pad = ls
 eta_arr = 1 - np.load('../data/SpringMassModel/FiberOrientation/fiber_orientation.npy')
 eta0,eta1,eta2,eta3= eta_arr[i-1,j-1],eta_arr[i-1,j],eta_arr[i,j],eta_arr[i,j-1]
@@ -135,31 +135,45 @@ delta_t = delta_t_m * it_m
 t_evals = np.linspace(0,N*delta_t,N)
 N_interp = int(it_m)*5
 
-t_start_training,t_stop_training = 0,T.shape[0]-3500
+t_start_training,t_stop_training = 0,12000#T.shape[0]-3500
+diff = 0
+start_indx = 0
+while diff < 900: 
+    dA_test = dA[t_stop_training+500:,i,j]
+    T_test = T[t_stop_training+500:,i,j]
+    maxima_temp0, _ = find_peaks(dA_test,prominence=.0007)#,height=.001
+    minima_temp0, _ = find_peaks(-dA_test,prominence=.0007)#,height=.001
+    max_indx, min_indx = index_finder(maxima_temp0, minima_temp0, dA_test,start_indx)
+    diff = minima_temp0[min_indx+1]-maxima_temp0[max_indx]
+    start_indx += 1
+    
+    t_start = t_stop_training + 500 + maxima_temp0[max_indx] - 400
+    t_stop = t_stop_training + 500+ minima_temp0[min_indx+1] + 800
 
-dA_test = dA[t_stop_training+500:,i,j]
-T_test = T[t_stop_training+500:,i,j]
-T_arr = np.array([T[:,i-1,j-1],T[:,i-1,j],T[:,i,j],T[:,i,j-1]])
-dA_arr = np.array([dA[:,i-1,j-1],dA[:,i-1,j],dA[:,i,j],dA[:,i,j-1]])
+# dA_test = dA[t_stop_training+500:,i,j]
+# T_test = T[t_stop_training+500:,i,j]
+# T_arr = np.array([T[:,i-1,j-1],T[:,i-1,j],T[:,i,j],T[:,i,j-1]])
+# dA_arr = np.array([dA[:,i-1,j-1],dA[:,i-1,j],dA[:,i,j],dA[:,i,j-1]])
 
-maxima_temp0, _ = find_peaks(dA_test,prominence=.0007)#,height=.001
-minima_temp0, _ = find_peaks(-dA_test,prominence=.0007)#,height=.001
-max_indx, min_indx = index_finder(maxima_temp0, minima_temp0, dA_test,start_indx=0)
+# maxima_temp0, _ = find_peaks(dA_test,prominence=.0007)#,height=.001
+# minima_temp0, _ = find_peaks(-dA_test,prominence=.0007)#,height=.001
+# max_indx, min_indx = index_finder(maxima_temp0, minima_temp0, dA_test,start_indx=0)
 
-t_start = t_stop_training + 500 + maxima_temp0[max_indx] - 300
-t_stop = t_stop_training + 500+ minima_temp0[min_indx+1] + 700
+# t_start = t_stop_training + 500 + maxima_temp0[max_indx] - 300
+# t_stop = t_stop_training + 500+ minima_temp0[min_indx+1] + 700
 
 T_rec = np.zeros((4,t_stop-t_start))
 T_arr_indx = [[i-1,j-1],[i-1,j],[i,j],[i,j-1]]
+T_arr = np.array([T[:,i-1,j-1],T[:,i-1,j],T[:,i,j],T[:,i,j-1]])
 
-#define Hyperparameters
+#define Hyperparameters for data reconstruction
 no_dt,no_points = 30,10
-delta_t = 20
+delta_t_rec = 20
 for indx in range(4):
     i_temp,j_temp = T_arr_indx[indx]
     dA_r_0_der_raw = np.append(np.diff(dA[t_start:t_stop,i_temp,j_temp],axis = 0),np.diff(dA[t_start:t_stop,i_temp,j_temp],axis = 0)[-1])
     
-    x_train,x_fit,y_train = shape_data(x_temp,x_cm_temp,dA[t_start_training:t_stop_training,:,:],T[t_start_training:t_stop_training,:,:],dA_r_0_der_raw,i_temp,j_temp,no_dt,no_points,delta_t,key = "dA_r_0_derivative")
+    x_train,x_fit,y_train = shape_data(x_temp,x_cm_temp,dA[t_start_training:t_stop_training,:,:],T[t_start_training:t_stop_training,:,:],dA_r_0_der_raw,i_temp,j_temp,no_dt,no_points,delta_t_rec,key = "dA_r_0_derivative")
     print('calculating element',indx)
     y_out_diff = euclidean_distance_trajectory(x_fit, x_train,y_train)
 
@@ -169,9 +183,7 @@ t_evals = np.linspace(0,N*delta_t,N)
 t_evals = t_evals[t_start:t_stop] - t_evals[t_start]
 x_i,x_j,x_cm,l_a = shape_input_for_adoptode(x_temp[t_start:t_stop,:], x_cm_temp[t_start:t_stop,:],T[t_start:t_stop,:],i,j,1) # i and j specify the cell taken from the grid 
 x_i_dot = np.append(np.diff(x_i,axis=0),np.diff(x_i,axis=0)[-1].reshape(1,2),axis=0)/(delta_t)
-#T_model = create_T(T_standard, t_evals, t_start, delta_t, t_peak_start,t_peak_stop)
 T_model = T_arr[:,t_start:t_stop]
-#T_rec = np.load('T_rec_test.npy')
 
 start = int((t_stop - t_start - 1000)/2)
 end = start + 1000
@@ -185,7 +197,7 @@ T_rec = T_rec[:,start:end]
 #arrays interpolieren
 t_interp, x_cm_interp = interpolate_x(x_cm,t_evals,N_interp)
 t_interp, x_j_interp = interpolate_x(x_j,t_evals,N_interp)
-t_interp, T_interp = interpolate_scalar(T_model,t_evals,N_interp)
+t_interp, T_interp = interpolate_scalar(T_rec,t_evals,N_interp)
 
 y0 = {"x1":x_i[0,0],'x2':x_i[0,1],'y1':(x_i[1,0]-x_i[0,0])/delta_t,'y2':(x_i[1,1]-x_i[0,1])/delta_t,'x_cm':x_cm[:,0,:],'x_j':x_j[:,0,:]}
 
@@ -222,7 +234,6 @@ real_params_up = {'l_g':l_0+ l_0*tol,
                   'k_g':k_g0+ k_g0*tol,'k_p':k_p0+ k_p0*tol,
                   'k_a':k_a0+ k_a0*tol,'m':m0+ m0*tol,'nu':nu0+ nu0*tol,'c_a': c_a0 + c_a0*tol ,'eta':1,'eta1':1,'eta2':1,'eta3':1}
 
-
 targets = {"x1":x_i[:,0].reshape((1,len(x_i[:,0]))),'x2':x_i[:,1].reshape((1,len(x_i[:,0]))),'y1':x_i_dot[:,0].reshape((1,len(x_i_dot[:,0]))),'y2':x_i_dot[:,1].reshape((1,len(x_i_dot[:,1])))}
 reset_every = 300
 t_reset_idcs = tuple([
@@ -236,7 +247,6 @@ kwargs_adoptODE = {'lr':.9e-2, 'epochs':500,'N_backups':1,
                    'upper_b_y0':{'x1':y0['x1'],'x2':y0['x2'],'y1':y0['y1']+0*y0['y1'],'y2':y0['y2']+0*y0['y2'] },
                    'lower_b': real_params_low,
                    'upper_b': real_params_up}
-
 
 print('start fit')
 loss=1

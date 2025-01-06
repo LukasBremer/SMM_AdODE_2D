@@ -10,8 +10,8 @@
 i=$((SLURM_ARRAY_TASK_ID / 10))
 j=$((SLURM_ARRAY_TASK_ID % 10))
 start_indx=0
-nr='rec'
+nr='T_rec_xl_3'
 
 module load python 
 source ../.venv/bin/activate
-python SinglePeakModel.py $i $j $nr $start_indx
+python MainRec.py $i $j $nr $start_indx
