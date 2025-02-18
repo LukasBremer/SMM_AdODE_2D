@@ -30,24 +30,22 @@ with h5py.File('../data/SpringMassModel/MechanicalData/data_eta_05_uvx.h5', 'r')
 N = T.shape[0]
 
 def define_MSD(**kwargs_sys):
-    # disc_x, disc_y = kwargs_sys['size'], kwargs_sys['size']
-    dx, dy = kwargs_sys['spacing'], kwargs_sys['spacing']
     N_sys = kwargs_sys['N_sys']
-    # padding = kwargs_sys['padding']
 
     def gen_params():
-        
-        return {key: value + value*np.random.uniform(-kwargs_sys['par_tol'], kwargs_sys['par_tol']) for key, value in kwargs_sys['params_true'].items()}, {}, {}
+        return {key:value + kwargs_sys['par_tol']*value*np.random.uniform(-1.0, 1.0) for key,value in kwargs_sys['params_true'].items()}, {}, {}
     
     def gen_y0():
         return {'u':kwargs_sys['u0'],'v':kwargs_sys['v0'],'T':kwargs_sys['T0'],'x':kwargs_sys['x0'],'x_dot':kwargs_sys['x_dot0']}
-    
-    kernel = np.array([[1, 4, 1], [4, -20.0, 4], [1, 4, 1]]) / (dx * dy * 6)
     @jit
-    def laplace(f):  #laplace of scalar
+    def kernel(spacing):
+        kernel = np.array([[1, 4, 1], [4, -20.0, 4], [1, 4, 1]]) / (spacing* spacing * 6)
+        return kernel
+    @jit
+    def laplace(f,params):  #laplace of scalar
         f_ext = jnp.concatenate((f[0:1], f, f[-1:]), axis=0)
         f_ext = jnp.concatenate((f_ext[:, 0:1], f_ext, f_ext[:, -1:]), axis=1)
-        return convolve2d(f_ext, kernel, mode='valid')
+        return convolve2d(f_ext, kernel(params['spacing']), mode='valid')
     @jit
     def epsilon(u,v,rp):
         return rp['epsilon_0']+rp['mu_1']*v/(u+rp['mu_2'])
@@ -64,10 +62,10 @@ def define_MSD(**kwargs_sys):
             x=y['x']
             x_dot=y['x_dot']
 
-            dudt = par['D']*laplace(u)-(par['k'])*u*(u-par['a'])*(u-1) - u*v
+            dudt = par['D']*laplace(u,par)-(par['k'])*u*(u-par['a'])*(u-1) - u*v
             dvdt = epsilon(u,v,par)*(-v-(par['k'])*u*(u-par['a']-1))
             dTdt = epsilon_T(u)*(par['k_T']*jnp.abs(u)-T)
-            dx_dotdt = 1/par['m'] *  (force_field_active(x,T,par) + force_field_passive(x,par) + force_field_struct(x,T,par)*0 - x_dot * par['c_damp'])
+            dx_dotdt = 1/par['m'] *  (force_field_active(x,T,par) + force_field_passive(x,par) + force_field_struct(x,T,par) - x_dot * par['c_damp'])
             dxdt = x_dot
 
             return {'u':dudt, 'v':dvdt, 'T':dTdt, 'x':zero_out_edges(dxdt), 'x_dot':zero_out_edges(dx_dotdt)}
@@ -75,9 +73,13 @@ def define_MSD(**kwargs_sys):
     def loss(ys, params, iparams, exparams, targets):
         # u = ys['u']
         # u_target = targets['u']
-        x = ys['x']
-        x_target = targets['x']
-        return  jnp.nanmean((x - x_target)**2)#jnp.nanmean((u - u_target)**2) +
+        pad = 10
+        x = ys['x'][:,:,pad:-pad,pad:-pad]
+        x_target = targets['x'][:,:,pad:-pad,pad:-pad]
+        x_dot = ys['x_dot'][:,:,pad:-pad,pad:-pad]
+        x_dot_target = targets['x_dot'][:,:,pad:-pad,pad:-pad]
+        
+        return  jnp.nanmean((x - x_target)**2 + (x_dot-x_dot_target)**2)#jnp.nanmean((u - u_target)**2) +
             
     return eom, loss, gen_params, gen_y0, {}
 
