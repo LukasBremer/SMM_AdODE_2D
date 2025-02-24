@@ -7,21 +7,11 @@ from jax.experimental.ode import odeint
 from jax import tree_util
 import jax.random as random
 import numpy as np
-#for visulization
-import os
-import matplotlib.pyplot as plt
-import ipywidgets as widgets
-from IPython.display import display
-# Set Palatino as the default font
-font = {'family': 'serif', 'serif': ['Palatino'], 'size': 20}
-plt.rc('font', **font)
-plt.rc('text', usetex=True)
 # import AdoptODE
 from adoptODE import train_adoptODE, simple_simulation, dataset_adoptODE
 #import the MSD mechanics
 from HelperAndMechanics import *
 import h5py
-
 # Load from HDF5
 with h5py.File('../data/SpringMassModel/MechanicalData/data_eta_05_uvx.h5', 'r') as f:
     v = f['v'][:]
@@ -29,6 +19,7 @@ with h5py.File('../data/SpringMassModel/MechanicalData/data_eta_05_uvx.h5', 'r')
     T = f['T'][:]
     x = f['x'][:]
     f.close()
+
 N = T.shape[0]
 
 def define_MSD(**kwargs_sys):
@@ -144,14 +135,15 @@ N,size,params = read_config(['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_
 keys =['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_t_e'
         ,'k_T','k_ij','k_ij_pad','k_j','k_a','k_a_pad','c_a','m','c_damp',
         'n_0','l_0','spacing']
+pad = 10
 tol = 0
 params_true = dict(zip(keys,params))
 params_low = {key: value - value*tol for key, value in params_true.items()}
 params_high = {key: value + value*tol for key, value in params_true.items()}
 x_dot = np.gradient(x, axis=1) / params_true['delta_t_e']
 sol_list = []
-
-u0,v0,T0,x0,x_dot0,t_evals = get_ini_sim(u,v,T,x,x_dot,sim_indx=0)
+sim_indx =0
+u0,v0,T0,x0,x_dot0,t_evals = get_ini_sim(u,v,T,x,x_dot,sim_indx)
 
 kwargs_sys = {'size': 100,
             'spacing': 1,
@@ -173,7 +165,8 @@ x_dot_sim = Simulation_MSD.ys['x_dot'][0]
 T_sim = Simulation_MSD.ys['T'][0]
 u_sim = Simulation_MSD.ys['u'][0]
 v_sim = Simulation_MSD.ys['v'][0]
-u0,v0,T0,x0,x_dot0,t_evals = get_ini_fit(u_sim,v_sim, T_sim, x_sim, x_dot_sim, sim_indx=0)
+
+u0,v0,T0,x0,x_dot0,t_evals = get_ini_fit(u_sim,v_sim, T_sim, x_sim, x_dot_sim, sim_indx)
 
 tol = 0.5
 params_low = {key: value - value*tol for key, value in params_true.items()}
@@ -203,57 +196,57 @@ _ = train_adoptODE(dataset_MSD)
 sol_list.append(dataset_MSD.params_train)
 print('Found params: ', dataset_MSD.params_train)
 
-for sim_indx in range(1,6):
-    u0,v0,T0,x0,x_dot0,t_evals = get_ini_sim(dataset_MSD.ys['u'][0],dataset_MSD.ys['v'][0],dataset_MSD.ys['T'][0],dataset_MSD.ys['x'][0],dataset_MSD.ys['x_dot'][0],sim_indx)
-    kwargs_sys = {'size': 100,
-            'spacing': 1,
-            'N_sys': 1,
-            'par_tol': 0,
-            'params_true': params_true,
-            'u0': u0,'v0': v0,'T0': T0,'x0': x0,'x_dot0': x_dot0}
-    kwargs_adoptODE = {'epochs': 10,'N_backups': 1,'lr': 1e-3,'lower_b': params_low,'upper_b': params_high,
-                    'lower_b_y0':{'u':u0,'v':v0,'T':T0,'x':x0,'x_dot':x_dot0},
-                        'upper_b_y0':{'u':u0,'v':v0,'T':T0,'x':x0,'x_dot':x_dot0}}
-    # Setting up a dataset via simulation
-    Simulation_MSD = simple_simulation(define_MSD,
-                                t_evals,
-                                kwargs_sys,
-                                kwargs_adoptODE)
+# for sim_indx in range(1,3):
+#     u0,v0,T0,x0,x_dot0,t_evals = get_ini_sim(dataset_MSD.ys['u'][0],dataset_MSD.ys['v'][0],dataset_MSD.ys['T'][0],dataset_MSD.ys['x'][0],dataset_MSD.ys['x_dot'][0],sim_indx)
+#     kwargs_sys = {'size': 100,
+#             'spacing': 1,
+#             'N_sys': 1,
+#             'par_tol': 0,
+#             'params_true': params_true,
+#             'u0': u0,'v0': v0,'T0': T0,'x0': x0,'x_dot0': x_dot0}
+#     kwargs_adoptODE = {'epochs': 10,'N_backups': 1,'lr': 1e-3,'lower_b': params_low,'upper_b': params_high,
+#                     'lower_b_y0':{'u':u0,'v':v0,'T':T0,'x':x0,'x_dot':x_dot0},
+#                         'upper_b_y0':{'u':u0,'v':v0,'T':T0,'x':x0,'x_dot':x_dot0}}
+#     # Setting up a dataset via simulation
+#     Simulation_MSD = simple_simulation(define_MSD,
+#                                 t_evals,
+#                                 kwargs_sys,
+#                                 kwargs_adoptODE)
 
-    x_sim = Simulation_MSD.ys['x'][0]
-    x_dot_sim = Simulation_MSD.ys['x_dot'][0]
-    T_sim = Simulation_MSD.ys['T'][0]
-    u_sim = Simulation_MSD.ys['u'][0]
-    v_sim = Simulation_MSD.ys['v'][0]
+#     x_sim = Simulation_MSD.ys['x'][0]
+#     x_dot_sim = Simulation_MSD.ys['x_dot'][0]
+#     T_sim = Simulation_MSD.ys['T'][0]
+#     u_sim = Simulation_MSD.ys['u'][0]
+#     v_sim = Simulation_MSD.ys['v'][0]
 
-    u0,v0,T0,x0,x_dot0,t_evals = get_ini_fit(dataset_MSD.ys_sol['u'][0],dataset_MSD.ys_sol['v'][0], dataset_MSD.ys_sol['T'][0], dataset_MSD.ys['x'], dataset_MSD.ys['x_dot'], sim_indx)
+#     u0,v0,T0,x0,x_dot0,t_evals = get_ini_fit(dataset_MSD.ys_sol['u'][0],dataset_MSD.ys_sol['v'][0], dataset_MSD.ys_sol['T'][0], dataset_MSD.ys['x'], dataset_MSD.ys['x_dot'], sim_indx)
 
-    tol = 0.5
-    params_low = {key: value - value*tol for key, value in params_true.items()}
-    params_high = {key: value + value*tol for key, value in params_true.items()}
-    params_high['k_ij_pad'],params_low['k_ij_pad'] = params_true['k_ij_pad']  ,params_true['k_ij_pad']
-    params_high['k_a_pad'],params_low['k_a_pad'] = params_true['k_a_pad']  ,params_true['k_a_pad']
+#     tol = 0.5
+#     params_low = {key: value - value*tol for key, value in params_true.items()}
+#     params_high = {key: value + value*tol for key, value in params_true.items()}
+#     params_high['k_ij_pad'],params_low['k_ij_pad'] = params_true['k_ij_pad']  ,params_true['k_ij_pad']
+#     params_high['k_a_pad'],params_low['k_a_pad'] = params_true['k_a_pad']  ,params_true['k_a_pad']
 
-    length = 30
-    targets = {'u':u_sim.reshape(1,length,100,100),'v':v_sim.reshape(1,length,100,100),'T':T_sim.reshape(1,length,100,100),'x':x_sim.reshape(1,length,2,size+2*pad+1,size+2*pad+1),'x_dot':x_dot_sim.reshape(1,length,2,size+2*pad+1,size+2*pad+1)}
-    kwargs_sys = {'size': 100,
-                'spacing': 1,
-                'N_sys': 1,
-                'par_tol': 0.5,
-                'params_true': params_true,
-                'u0': u0,'v0': v0,'T0': T0,'x0': x0,'x_dot0': x_dot0}
-    kwargs_adoptODE = {'epochs': 200,'N_backups': 1,'lr': 5e-2,'lower_b': params_low,'upper_b': params_high,
-                    'lower_b_y0':{'u':u0,'v':v0,'T':T0,'x':x0,'x_dot':x_dot0},
-                        'upper_b_y0':{'u':jnp.full_like(u0,1),'v':jnp.full_like(v0,2.5),'T':jnp.full_like(T0,3),'x':x0,'x_dot':x_dot0}}
+#     length = 30
+#     targets = {'u':u_sim.reshape(1,length,100,100),'v':v_sim.reshape(1,length,100,100),'T':T_sim.reshape(1,length,100,100),'x':x_sim.reshape(1,length,2,size+2*pad+1,size+2*pad+1),'x_dot':x_dot_sim.reshape(1,length,2,size+2*pad+1,size+2*pad+1)}
+#     kwargs_sys = {'size': 100,
+#                 'spacing': 1,
+#                 'N_sys': 1,
+#                 'par_tol': 0.5,
+#                 'params_true': params_true,
+#                 'u0': u0,'v0': v0,'T0': T0,'x0': x0,'x_dot0': x_dot0}
+#     kwargs_adoptODE = {'epochs': 200,'N_backups': 1,'lr': 5e-2,'lower_b': params_low,'upper_b': params_high,
+#                     'lower_b_y0':{'u':u0,'v':v0,'T':T0,'x':x0,'x_dot':x_dot0},
+#                         'upper_b_y0':{'u':jnp.full_like(u0,1),'v':jnp.full_like(v0,2.5),'T':jnp.full_like(T0,3),'x':x0,'x_dot':x_dot0}}
 
-    dataset_MSD = dataset_adoptODE(define_MSD,
-                                    targets,
-                                    t_evals, 
-                                    kwargs_sys,
-                                    kwargs_adoptODE,
-                                    true_params=params_true)
-    _ = train_adoptODE(dataset_MSD)
-    sol_list.append(dataset_MSD.params_train)
-    print('Found params: ', dataset_MSD.params_train)
+#     dataset_MSD = dataset_adoptODE(define_MSD,
+#                                     targets,
+#                                     t_evals, 
+#                                     kwargs_sys,
+#                                     kwargs_adoptODE,
+#                                     true_params=params_true)
+#     _ = train_adoptODE(dataset_MSD)
+#     sol_list.append(dataset_MSD.params_train)
+#     print('Found params: ', dataset_MSD.params_train)
 
 np.save('MSD_fit.npy',sol_list)
