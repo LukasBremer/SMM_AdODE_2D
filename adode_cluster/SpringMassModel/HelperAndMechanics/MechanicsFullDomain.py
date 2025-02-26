@@ -6,7 +6,13 @@ from jax.flatten_util import ravel_pytree
 from jax.experimental.ode import odeint
 from jax import tree_util
 import numpy as np
-
+@jit
+def zero_out_edgesFD(force):
+        force = force.at[0, :,:].set(0)   # Top row
+        force = force.at[-1, :,:].set(0)  # Bottom row
+        force = force.at[:, 0,:].set(0)   # Left column
+        force = force.at[:, -1,:].set(0)  # Right column
+        return force
 @jit
 def distance_y(xy_grid):
     return (xy_grid[:,1:] - xy_grid[:,:-1])
