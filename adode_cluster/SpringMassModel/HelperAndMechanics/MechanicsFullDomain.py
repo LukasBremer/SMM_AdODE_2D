@@ -123,6 +123,46 @@ def force_field_active(xy_grid,T,par):
     
     return zero_out_edges(force_right_to_bottom+force_right_to_top+force_left_to_bottom+force_left_to_top)
 @jit
+def force_field_active_n_var(xy_grid,T,par):
+    '''calculates the active forces on the grid; enforces zero force on the edges
+    input: xy grid shape (2, size+2pad+1, size+2pad+1) array of xy coordinates
+        T shape (size, size) array of electric signal
+        enforces two lazers of same T outside the simulatio grid and pads the rest of the T values with 0
+    output: shape (2, size+2pad+1, size+2pad+1) array of forces
+        enforces zero force on the edges'''
+    attachment_right, attachment_left = interpolate_active(xy_grid, par['n_0'])
+    x_cm = center_of_mass_neighbors(xy_grid)
+    
+    #all distances point to the center of mass points
+    d_act_right_to_bottom = distance_axial(x_cm, attachment_right)
+    d_act_right_to_bottom = jnp.pad(d_act_right_to_bottom, ((0, 0), (0, 1), (1, 0)),mode ='constant',constant_values = 1)
+    d_act_right_to_top = distance_axial(x_cm, attachment_right)
+    d_act_right_to_top = jnp.pad(d_act_right_to_top, ((0, 0), (1, 0), (1, 0)),mode ='constant',constant_values = 1)  
+    d_act_left_to_bottom = distance_axial(x_cm, attachment_left)
+    d_act_left_to_bottom = jnp.pad(d_act_left_to_bottom, ((0, 0), (0, 1), (0, 1)),mode ='constant',constant_values = 1)
+    d_act_left_to_top = distance_axial(x_cm, attachment_left)
+    d_act_left_to_top = jnp.pad(d_act_left_to_top, ((0, 0), (1, 0), (0, 1)),mode ='constant',constant_values = 1)
+    # pad electric signal 
+    T_padded = enforce_T_and_pad(T, xy_grid)#shape (size+2pad, size+2pad)
+    # initiate params
+    k_active = jnp.full((1,T.shape[0]+2,T.shape[1]+2), par['k_a'])
+    n = jnp.full((1,100,100), par['n_0'])
+    
+    pad = int((xy_grid.shape[1]-k_active.shape[1]) / 2 )  # Pad the extended grid equally on all sides
+    pad_n = int((xy_grid.shape[1]- n.shape[1]) / 2 )  # Pad the extended grid equally on all sides
+    # Pad the extended grid equally on all sides
+    k_active_pad = jnp.pad(k_active, ((0,0), (pad, pad), (pad, pad)), mode="constant", constant_values=par['k_a_pad'])
+    n_pad = jnp.pad(n, ((0,0),(pad_n, pad_n), (pad_n, pad_n)), mode="constant", constant_values=.5)
+    l_a = ((n_pad-par['l_0']/2)**2+(par['l_0']/2)**2)**(1/2)
+    l_a_effective = l_a / (1+par['c_a']*T_padded)#shape (size+2pad, size+2pad)
+    # Compute the spring forces acting on the grid; division by zero on the edges gets nan --> zero out edges in the end
+    force_right_to_bottom = -jnp.pad((1-n_pad),((0, 0), (0, 1), (1, 0))) * jnp.pad(k_active_pad,((0, 0), (0, 1), (1, 0)))*(jnp.pad(l_a_effective,((0, 0), (0, 1), (1, 0)))-jnp.linalg.norm(d_act_right_to_bottom,axis = 0)) * d_act_right_to_bottom/jnp.linalg.norm(d_act_right_to_bottom,axis = 0) 
+    force_right_to_top = jnp.pad(-n_pad,((0,0),(1,0),(1,0))) * jnp.pad(k_active_pad,((0, 0), (1, 0), (1, 0))) *(jnp.pad(l_a_effective,((0, 0), (1, 0), (1, 0))) -jnp.linalg.norm(d_act_right_to_top,axis = 0)) * d_act_right_to_top/jnp.linalg.norm(d_act_right_to_top,axis = 0) 
+    force_left_to_bottom = jnp.pad(-n_pad,((0, 0), (0, 1), (0, 1)))* jnp.pad(k_active_pad,((0, 0), (0, 1), (0, 1)))*(jnp.pad(l_a_effective,((0, 0), (0, 1), (0, 1)))-jnp.linalg.norm(d_act_left_to_bottom,axis = 0)) * d_act_left_to_bottom/jnp.linalg.norm(d_act_left_to_bottom,axis = 0)       
+    force_left_to_top = jnp.pad(-(1-n_pad), ((0, 0), (1, 0), (0, 1))) * jnp.pad(k_active_pad, ((0, 0), (1, 0), (0, 1)))*(jnp.pad(l_a_effective, ((0, 0), (1, 0), (0, 1)))-jnp.linalg.norm(d_act_left_to_top,axis = 0)) * d_act_left_to_top/jnp.linalg.norm(d_act_left_to_top,axis = 0) 
+    
+    return zero_out_edges(force_right_to_bottom+force_right_to_top+force_left_to_bottom+force_left_to_top)
+@jit
 def force_field_passive(xy_grid,par):
     '''calculates the passive forces on the grid; enforces zero force on the edges
     input: shape (2, size+2pad, size+2pad) array of xy coordinates
@@ -149,6 +189,36 @@ def force_field_passive(xy_grid,par):
     force_bottom_to_right = -(1-n) * k_passive*(l_p-jnp.linalg.norm(d_pass_bottom_to_right,axis = 0)) * d_pass_bottom_to_right/jnp.linalg.norm(d_pass_bottom_to_right,axis = 0)
     force_bottom_to_left = -n * k_passive*(l_p-jnp.linalg.norm(d_pass_bottom_to_left,axis = 0)) * d_pass_bottom_to_left/jnp.linalg.norm(d_pass_bottom_to_left,axis = 0)
     
+    return zero_out_edges(force_top_to_right+force_top_to_left+force_bottom_to_right+force_bottom_to_left)
+@jit
+def force_field_passive(xy_grid,par):
+    '''calculates the passive forces on the grid; enforces zero force on the edges
+    input: shape (2, size+2pad, size+2pad) array of xy coordinates
+    output: shape (2, size+2pad, size+2pad) array of forces
+        enforces zero force on the edges'''
+    attachment_top, attachment_bottom = interpolate_passive(xy_grid, par['n_0'])
+    x_cm = center_of_mass_neighbors(xy_grid)
+    d_pass_top_to_right = distance_axial(x_cm,attachment_top)
+    d_pass_top_to_right = jnp.pad(d_pass_top_to_right, ((0, 0), (1, 0), (1, 0)),mode ='constant',constant_values = 1)
+    d_pass_top_to_left = distance_axial(x_cm,attachment_top)
+    d_pass_top_to_left = jnp.pad(d_pass_top_to_left, ((0, 0), (1, 0), (0, 1)),mode ='constant',constant_values = 1)
+    d_pass_bottom_to_right = distance_axial(x_cm,attachment_bottom)
+    d_pass_bottom_to_right = jnp.pad(d_pass_bottom_to_right, ((0, 0), (0, 1), (1, 0)),mode ='constant',constant_values = 1)
+    d_pass_bottom_to_left = distance_axial(x_cm,attachment_bottom)
+    d_pass_bottom_to_left = jnp.pad(d_pass_bottom_to_left, ((0, 0), (0, 1), (0, 1)),mode ='constant',constant_values = 1)
+    # initiate params
+    k_passive = jnp.full(xy_grid.shape, par['k_T'])
+    # l_p = jnp.full(xy_grid.shape, ((par['n_0']-par['l_0']/2)**2+(par['l_0']/2)**2)**(1/2))
+    n = par['n_0']
+    n = jnp.full((1,100,100), par['n_0'])
+    pad_n = int((xy_grid.shape[1]- n.shape[1]) / 2 )
+    n_pad = jnp.pad(n, ((0,0),(pad_n, pad_n), (pad_n, pad_n)), mode="constant", constant_values=.5)
+    l_p = ((n_pad-par['l_0']/2)**2+(par['l_0']/2)**2)**(1/2)
+    # Compute the spring forces acting on the grid; division by zero on the edges gets nan --> zero out edges in the end
+    force_top_to_right = -jnp.pad(n_pad, ((0, 0), (1, 0), (1, 0))) * k_passive*(jnp.pad(l_p, ((0, 0), (1, 0), (1, 0)))-jnp.linalg.norm(d_pass_top_to_right,axis = 0)) * d_pass_top_to_right/jnp.linalg.norm(d_pass_top_to_right,axis = 0) 
+    force_top_to_left = -jnp.pad((1-n_pad), ((0, 0), (1, 0), (0, 1))) * k_passive*(jnp.pad(l_p, ((0, 0), (1, 0), (0, 1)))-jnp.linalg.norm(d_pass_top_to_left,axis = 0)) * d_pass_top_to_left/jnp.linalg.norm(d_pass_top_to_left,axis = 0)
+    force_bottom_to_right = -jnp.pad((1-n_pad), ((0, 0), (0, 1), (1, 0)))* k_passive*(jnp.pad(l_p, ((0, 0), (0, 1), (1, 0)))-jnp.linalg.norm(d_pass_bottom_to_right,axis = 0)) * d_pass_bottom_to_right/jnp.linalg.norm(d_pass_bottom_to_right,axis = 0)
+    force_bottom_to_left = -jnp.pad(n_pad, ((0, 0), (0, 1), (0, 1)))* k_passive*(jnp.pad(l_p, ((0, 0), (0, 1), (0, 1)))-jnp.linalg.norm(d_pass_bottom_to_left,axis = 0)) * d_pass_bottom_to_left/jnp.linalg.norm(d_pass_bottom_to_left,axis = 0)
     return zero_out_edges(force_top_to_right+force_top_to_left+force_bottom_to_right+force_bottom_to_left)
 @jit
 def center_of_mass_neighbors(xy_grid):
