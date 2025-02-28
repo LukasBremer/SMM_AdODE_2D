@@ -6,6 +6,7 @@ from jax.flatten_util import ravel_pytree
 from jax.experimental.ode import odeint
 from jax import tree_util
 import numpy as np
+
 @jit
 def zero_out_edgesFD(force):
         force = force.at[0, :,:].set(0)   # Top row
@@ -106,11 +107,13 @@ def force_field_active(xy_grid,T,par):
     T_padded = enforce_T_and_pad(T, xy_grid)#shape (size+2pad, size+2pad)
     # initiate params
     k_active = jnp.full((1,T.shape[0]+2,T.shape[1]+2), par['k_a'])
+    # n = jnp.full(T.shape, par['n_0'])
+    n = par['n_0']
     pad = int((xy_grid.shape[1]-k_active.shape[1]) / 2 )  # Pad the extended grid equally on all sides
     # Pad the extended grid equally on all sides
     k_active_pad = jnp.pad(k_active, ((0,0), (pad, pad), (pad, pad)), mode="constant", constant_values=par['k_a_pad'])
     l_a = jnp.full(T_padded.shape, ((par['n_0']-par['l_0']/2)**2+(par['l_0']/2)**2)**(1/2))
-    n = par['n_0']
+    
     l_a_effective = l_a / (1+par['c_a']*T_padded)#shape (size+2pad, size+2pad)
     # Compute the spring forces acting on the grid; division by zero on the edges gets nan --> zero out edges in the end
     force_right_to_bottom = -(1-n) * jnp.pad(k_active_pad,((0, 0), (0, 1), (1, 0)))*(jnp.pad(l_a_effective,((0, 0), (0, 1), (1, 0)))-jnp.linalg.norm(d_act_right_to_bottom,axis = 0)) * d_act_right_to_bottom/jnp.linalg.norm(d_act_right_to_bottom,axis = 0) 

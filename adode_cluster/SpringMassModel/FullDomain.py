@@ -147,6 +147,7 @@ def initial_dataset(length, tol, sampling_rate,kwargs_training):
     x_dot = np.gradient(x, axis=0) / params_true['delta_t_e']
     params_low['k_ij_pad'], params_high['k_ij_pad'] = params_true['k_ij_pad'],params_true['k_ij_pad']
     params_low['k_a_pad'], params_high['k_a_pad'] = params_true['k_a_pad'],params_true['k_a_pad']
+    params_low['delta_t_e'], params_high['delta_t_e'] = params_true['delta_t_e'],params_true['delta_t_e']
 
     u0,v0,T0,x0,x_dot0,t_evals = u[0],v[0],T[0],x[0],x_dot[0],np.linspace(0, params_true['delta_t_e']*sampling_rate*length, length)
     kwargs_sys = {'size': 100,
@@ -181,7 +182,7 @@ def initial_dataset(length, tol, sampling_rate,kwargs_training):
                                     kwargs_sys,
                                     kwargs_adoptODE,
                                     true_params=params_true)
-    return dataset_MSD
+    return dataset_MSD,Simulation_MSD
 
 def continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate,kwargs_training, keep_data = True ,keep_params = True):
     # Read the config file
@@ -199,6 +200,7 @@ def continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate,kwar
     x_dot = np.gradient(x, axis=0) / params_true['delta_t_e']
     params_low['k_ij_pad'], params_high['k_ij_pad'] = params_true['k_ij_pad'],params_true['k_ij_pad']
     params_low['k_a_pad'], params_high['k_a_pad'] = params_true['k_a_pad'],params_true['k_a_pad']
+    params_low['delta_t_e'], params_high['delta_t_e'] = params_true['delta_t_e'],params_true['delta_t_e']
 
     u0,v0,T0,x0,x_dot0,t_evals = Simulation_MSD.ys['u'][0,-1],Simulation_MSD.ys['v'][0,-1],Simulation_MSD.ys['T'][0,-1],Simulation_MSD.ys['x'][0,-1],Simulation_MSD.ys['x_dot'][0,-1],np.linspace(0, params_true['delta_t_e']*sampling_rate*length, length)
     kwargs_sys = {'size': 100,
@@ -244,37 +246,37 @@ def continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate,kwar
                                     true_params=params_true)
     return dataset_MSD_2, Simulation_MSD_2
 
-def save_run(run, dataset, length, sampling_rate):
+def save_run(run, Simulation, dataset, length, sampling_rate,tol,keep_data):
     '''prints and saves the results of the training'''
     print('Parameter:   True Value:   Recovered Value:')
     for key in dataset.params.keys():
         print(key+(16-len(key))*' '+'{:.3f}         {:-3f}'.format(dataset.params[key], dataset.params_train[key]),'rel err',np.abs(dataset.params[key]-dataset.params_train[key])/dataset.params[key])
     
-    with h5py.File('../data/SpringMassModel/EtaSweep/FullDomain_len'+str(length)+'lr'+str(sampling_rate)+'.h5', 'w') as f:
+    with h5py.File('../data/SpringMassModel/EtaSweep/FullDomain_len'+str(length)+'lr'+str(sampling_rate)+'tol'+str(tol)+'keepdata'+str(keep_data)+'.h5', 'w') as f:
         group = f.create_group(run)  # Create a group instead of a dataset
         group.create_dataset('u_sol', data=dataset.ys_sol['u'])
-        group.create_dataset('u',data=dataset.ys['u'])
+        group.create_dataset('u',data=Simulation.ys['u'])
         group.create_dataset('v_sol', data=dataset.ys_sol['v'])
-        group.create_dataset('v',data=dataset.ys['v'])
+        group.create_dataset('v',data=Simulation.ys['v'])
         group.create_dataset('T_sol', data=dataset.ys_sol['T'])
-        group.create_dataset('T',data=dataset.ys['T'])
+        group.create_dataset('T',data=Simulation.ys['T'])
         group.create_dataset('x_sol', data=dataset.ys_sol['x'])
-        group.create_dataset('x',data=dataset.ys['x'])
+        group.create_dataset('x',data=Simulation.ys['x'])
         params = group.create_group("params_train")  # Create a subgroup
         for key, value in dataset.params_train.items():
             params.attrs[key] = value  # Store values as attributes
 
     print(f"Data for run '{run}' has been successfully added/updated.")
 
-def save_new_run(run, dataset_MSD, length, sampling_rate):
+def save_new_run(run, Simulation, dataset, length, sampling_rate,tol,keep_data):
     '''Opens an existing HDF5 file, appends new data, and saves the results'''
     
     print('Parameter:   True Value:   Recovered Value:')
-    for key in dataset_MSD.params.keys():
-        print(key + (16 - len(key)) * ' ' + '{:.3f}         {:-3f}'.format(dataset_MSD.params[key], dataset_MSD.params_train[key]),
-              'rel err', np.abs(dataset_MSD.params[key] - dataset_MSD.params_train[key]) / dataset_MSD.params[key])
+    for key in dataset.params.keys():
+        print(key + (16 - len(key)) * ' ' + '{:.3f}         {:-3f}'.format(dataset.params[key], dataset.params_train[key]),
+              'rel err', np.abs(dataset.params[key] - dataset.params_train[key]) / dataset.params[key])
     
-    file_path = '../data/SpringMassModel/EtaSweep/FullDomain_len' + str(length) + 'lr' + str(sampling_rate) + '.h5'
+    file_path = '../data/SpringMassModel/EtaSweep/FullDomain_len' + str(length) + 'lr' + str(sampling_rate) + 'tol'+str(tol)+'keepdata'+str(keep_data)+'.h5'
     
     with h5py.File(file_path, 'a') as f:  # Open the file in append mode ('a')
         # Check if the group already exists; if not, create it
@@ -284,14 +286,14 @@ def save_new_run(run, dataset_MSD, length, sampling_rate):
             group = f[run]  # Access the existing group
 
         # Create or update datasets
-        group.create_dataset('u_sol', data=dataset_MSD.ys_sol['u'], overwrite=True)
-        group.create_dataset('u', data=dataset_MSD.ys['u'], overwrite=True)
-        group.create_dataset('v_sol', data=dataset_MSD.ys_sol['v'], overwrite=True)
-        group.create_dataset('v', data=dataset_MSD.ys['v'], overwrite=True)
-        group.create_dataset('T_sol', data=dataset_MSD.ys_sol['T'], overwrite=True)
-        group.create_dataset('T', data=dataset_MSD.ys['T'], overwrite=True)
-        group.create_dataset('x_sol', data=dataset_MSD.ys_sol['x'], overwrite=True)
-        group.create_dataset('x', data=dataset_MSD.ys['x'], overwrite=True)
+        group.create_dataset('u_sol', data=dataset.ys_sol['u'])
+        group.create_dataset('u', Simulation.ys['u'])
+        group.create_dataset('v_sol', data=dataset.ys_sol['v'])
+        group.create_dataset('v', Simulation.ys['v'])
+        group.create_dataset('T_sol', data=dataset.ys_sol['T'])
+        group.create_dataset('T', Simulation.ys['T'])
+        group.create_dataset('x_sol', data=dataset.ys_sol['x'])
+        group.create_dataset('x', Simulation.ys['x'])
         
         # Create or update the params subgroup and store parameters as attributes
         if "params_train" not in group:
@@ -299,7 +301,7 @@ def save_new_run(run, dataset_MSD, length, sampling_rate):
         else:
             params = group["params_train"]  # Access existing subgroup
         
-        for key, value in dataset_MSD.params_train.items():
+        for key, value in dataset.params_train.items():
             params.attrs[key] = value  # Store values as attributes
 
     print(f"Data for run '{run}' has been successfully added/updated.")
@@ -310,18 +312,20 @@ kwargs_training = {'epochs': 200,'N_backups': 4,
                     'v_low':0,'v_high':np.max(v),
                     'T_low':0,'T_high':np.max(T)}
 #start initial training
-length = 5
-tol = 0.5
+length = 8
+tol = 0.99
 sampling_rate = 20
-dataset_MSD = initial_dataset(length , tol, sampling_rate,kwargs_training)
+dataset_MSD,Simulation_MSD = initial_dataset(length , tol, sampling_rate,kwargs_training)
 params_final, losses, errors, params_history = train_adoptODE(dataset_MSD, print_interval=10, save_interval=10)
+keep_data = False
 
 run = 'run0'
-save_run(run, dataset_MSD, length, sampling_rate)
-#continue training
+save_run(run, Simulation_MSD ,dataset_MSD, length, sampling_rate,tol,keep_data)
 
-for i in range(1,3):
-    dataset_MSD,Simulation_MSD = continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate,kwargs_training,keep_data= False)
+#continue training
+for i in range(1,5):
+    #overwrite old simulation and dataset with new one
+    dataset_MSD,Simulation_MSD = continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate,kwargs_training,keep_data= keep_data)
     params_final, losses, errors, params_history = train_adoptODE(dataset_MSD, print_interval=10, save_interval=10)
     run = 'run'+str(i)
-    save_new_run(run, dataset_MSD, length, sampling_rate)
+    save_new_run(run, Simulation_MSD, dataset_MSD, length, sampling_rate,tol,keep_data)
