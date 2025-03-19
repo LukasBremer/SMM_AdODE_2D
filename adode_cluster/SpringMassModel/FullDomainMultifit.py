@@ -99,11 +99,7 @@ def define_MSD_rec(**kwargs_sys):
     N_sys = kwargs_sys['N_sys']
 
     def gen_params():
-        iparams = {'testpar':0}
-        params = {key:value + kwargs_sys['par_tol']*value*np.random.uniform(-1.0, 1.0) for key,value in kwargs_sys['params_true'].items()}
-        iparams = {key:jnp.array([value + kwargs_sys['par_tol']*value*np.random.uniform(-1.0, 1.0) for _ in range(kwargs_sys['N_sys'])]) for key,value in kwargs_sys['params_true'].items()}
-        # iparams = {key:np.full(kwargs_sys['N_sys'],[value + kwargs_sys['par_tol']*value*np.random.uniform(-1.0, 1.0)]) for key,value in kwargs_sys['params_true'].items()}
-        return  params,{}, {}
+        return {key:value + kwargs_sys['par_tol']*value*np.random.uniform(-1.0, 1.0) for key,value in kwargs_sys['params_true'].items()}, {}, {}
     
     def gen_y0():
         return {'u':kwargs_sys['u0'],'v':kwargs_sys['v0'],'T':kwargs_sys['T0'],'x':kwargs_sys['x0'],'x_dot':kwargs_sys['x_dot0']}
@@ -173,16 +169,6 @@ def define_MSD_rec(**kwargs_sys):
             
     return eom, loss, gen_params, None, {}
 
-@jit
-def multi_meas_constraint(ys, params, iparams, exparams, ys_target):
-    param_list = ['k_ij', 'k_a', 'c_a', 'l_0', 'D', 'a', 
-                  'k', 'mu_1', 'mu_2', 'k_T']
-    
-    # Vectorized sum of squared sums
-    mmc = 1e-3 * sum(jnp.sum(iparams[key])**2 for key in param_list)
-    
-    return 0.*mmc
-
 def initial_dataset(length, tol, sampling_rate,kwargs_training):
     '''makes initial simulation from uvx data and returns dataset for training'''
     # Read the config file
@@ -193,8 +179,8 @@ def initial_dataset(length, tol, sampling_rate,kwargs_training):
     keys =['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_t_e'
             ,'k_T','k_ij','k_ij_pad','k_j','k_a','k_a_pad','c_a','m','c_damp',
             'n_0','l_0','spacing']
+    n_dist = kwargs_training['n_dist']
 
-    
     params_true = dict(zip(keys,params))
     params_low = {key: value - value*tol for key, value in params_true.items()}
     params_high = {key: value + value*tol for key, value in params_true.items()}
@@ -202,60 +188,36 @@ def initial_dataset(length, tol, sampling_rate,kwargs_training):
     params_low['k_ij_pad'], params_high['k_ij_pad'] = params_true['k_ij_pad'],params_true['k_ij_pad']
     params_low['k_a_pad'], params_high['k_a_pad'] = params_true['k_a_pad'],params_true['k_a_pad']
     params_low['delta_t_e'], params_high['delta_t_e'] = params_true['delta_t_e'],params_true['delta_t_e']
-    
+
     u0,v0,T0,x0,x_dot0,t_evals = u[0],v[0],T[0],x[0],x_dot[0],np.linspace(0, params_true['delta_t_e']*sampling_rate*length, length)
+    
     kwargs_sys = {'size': 100,
                 'spacing': 1,
                 'N_sys': 1,
                 'par_tol': 0,
-                'n_dist':kwargs_training['n_dist'],
+                'n_dist':n_dist,
                 'eta_var':kwargs_training['eta_var'],
                 'params_true': params_true,
                 'u0': u0,'v0': v0,'T0': T0,'x0': x0,'x_dot0': x_dot0}
     kwargs_adoptODE = {'epochs': 10,'N_backups': 1,'lr': 1e-3,'lower_b': params_true,'upper_b': params_true,
                     'lower_b_y0':{'u':u0,'v':v0,'T':T0,'x':x0,'x_dot':x_dot0},
-                    'upper_b_y0':{'u':u0,'v':v0,'T':T0,'x':x0,'x_dot':x_dot0}}
-    Simulation_MSD = simple_simulation(define_MSD,
-                                    t_evals,
-                                    kwargs_sys,
-                                    kwargs_adoptODE)
-    
-    targets = {'u':jnp.full((Simulation_MSD.ys['u'].shape),.5),'v': jnp.zeros_like(Simulation_MSD.ys['v']),'T':jnp.zeros_like(Simulation_MSD.ys['T']),
-            'x':Simulation_MSD.ys['x'],'x_dot':Simulation_MSD.ys['x_dot']}
-    
-    for _ in range(1,kwargs_training['N_sys']):
-        u0,v0,T0,x0,x_dot0,t_evals = Simulation_MSD.ys['u'][0,-1],Simulation_MSD.ys['v'][0,-1],Simulation_MSD.ys['T'][0,-1],Simulation_MSD.ys['x'][0,-1],Simulation_MSD.ys['x_dot'][0,-1],np.linspace(0, params_true['delta_t_e']*sampling_rate*length, length)
-        # u[0],v[0],T[0],x[0],x_dot[0],np.linspace(0, params_true['delta_t_e']*sampling_rate*length, length)
-        
-        kwargs_sys = {'size': 100,
-                    'spacing': 1,
-                    'N_sys': 1,
-                    'par_tol': 0,
-                    'n_dist':n_dist,
-                    'eta_var':kwargs_training['eta_var'],
-                    'params_true': params_true,
-                    'u0': u0,'v0': v0,'T0': T0,'x0': x0,'x_dot0': x_dot0}
-        kwargs_adoptODE = {'epochs': 10,'N_backups': 1,'lr': 1e-3,'lower_b': params_true,'upper_b': params_true,
-                        'lower_b_y0':{'u':u0,'v':v0,'T':T0,'x':x0,'x_dot':x_dot0},
                         'upper_b_y0':{'u':u0,'v':v0,'T':T0,'x':x0,'x_dot':x_dot0}}
 
-        # Setting up a dataset via simulation
-        Simulation_MSD = simple_simulation(define_MSD,
-                                    t_evals,
-                                    kwargs_sys,
-                                    kwargs_adoptODE)
-        targets = {'u':jnp.concatenate((targets['u'],targets['u'][0:1]),axis=0),'T':jnp.concatenate((targets['T'],targets['T'][0:1]),axis=0), 'v':jnp.concatenate((targets['v'],targets['v'][0:1]),axis=0),
-                    'x':jnp.concatenate((targets['x'],Simulation_MSD.ys['x']),axis=0),'x_dot':jnp.concatenate((targets['x_dot'],Simulation_MSD.ys['x_dot']),axis=0)}
-        
+    # Setting up a dataset via simulation
+    Simulation_MSD = simple_simulation(define_MSD,
+                                t_evals,
+                                kwargs_sys,
+                                kwargs_adoptODE)
     if kwargs_training['eta_var'] == True:
-        params_gaussian = {'Amp'+str(i)+str(j):0.1 for i in range(kwargs_training['n_gaussians']) for j in range(kwargs_training['n_gaussians'])}
-        params_gaussian_low = {'Amp'+str(i)+str(j):-1 for i in range(kwargs_training['n_gaussians']) for j in range(kwargs_training['n_gaussians'])}
-        params_gaussian_high = {'Amp'+str(i)+str(j):1 for i in range(kwargs_training['n_gaussians']) for j in range(kwargs_training['n_gaussians'])}
+        params_gaussian = {'Amp'+str(i)+str(j):0.1 for i in range(3) for j in range(3)}
+        params_gaussian_low = {'Amp'+str(i)+str(j):-1 for i in range(3) for j in range(3)}
+        params_gaussian_high = {'Amp'+str(i)+str(j):1 for i in range(3) for j in range(3)}
         params_true = params_true|params_gaussian
         params_low = params_low|params_gaussian_low
         params_high = params_high|params_gaussian_high
 
-
+    targets = {'u':jnp.full((Simulation_MSD.ys['u'].shape),.5),'v': jnp.zeros_like(Simulation_MSD.ys['v']),'T':jnp.zeros_like(Simulation_MSD.ys['T']),
+            'x':Simulation_MSD.ys['x'],'x_dot':Simulation_MSD.ys['x_dot']}
 
     kwargs_sys = {'size': 100,
                 'N_sys': kwargs_training['N_sys'],
@@ -263,24 +225,19 @@ def initial_dataset(length, tol, sampling_rate,kwargs_training):
                 'eta_var':kwargs_training['eta_var'],
                 'params_true': params_true,
                 'n_gaussians':kwargs_training['n_gaussians']}
-    kwargs_adoptODE = {'epochs': kwargs_training['epochs'],'N_backups': kwargs_training['N_backups'],'lr':kwargs_training['lr'],
-                    'lower_b': params_low,'upper_b': params_high,
+    kwargs_adoptODE = {'epochs': kwargs_training['epochs'],'N_backups': kwargs_training['N_backups'],'lr':kwargs_training['lr'],'lower_b': params_low,'upper_b': params_high,
                     'lr_y0':kwargs_training['lr_y0'],
-                    # 'lr_ip': kwargs_training['lr_ip'],
                     'lower_b_y0':{'u':kwargs_training['u_low'],'v':kwargs_training['v_low'],'T':kwargs_training['T_low'],'x':x0,'x_dot':x_dot0},
-                    'upper_b_y0':{'u':kwargs_training['u_high'],'v':kwargs_training['v_high'],'T':kwargs_training['T_high'],'x':x0,'x_dot':x_dot0}}
-    if 'multi_measurement_constraint' in kwargs_training:
-        kwargs_adoptODE = kwargs_adoptODE|{'multi_measurement_constraint':kwargs_training['multi_measurement_constraint']}
+                        'upper_b_y0':{'u':kwargs_training['u_high'],'v':kwargs_training['v_high'],'T':kwargs_training['T_high'],'x':x0,'x_dot':x_dot0}}
     dataset_MSD = dataset_adoptODE(define_MSD_rec,
                                     targets,
                                     t_evals, 
                                     kwargs_sys,
                                     kwargs_adoptODE,
-                                    true_params=params_true)#,
-                                    #true_iparams=params_true)
+                                    true_params=params_true)
     return dataset_MSD,Simulation_MSD
 
-def continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate, kwargs_training, tol_AP, keep_data = True ,keep_params = True):
+def continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate,kwargs_training, keep_data = True ,keep_params = True):
     # Read the config file
     N,size,params = read_config(['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_t_e'
                                 ,'k_T','k_ij','k_ij_pad','k_j','k_a','k_a_pad','c_a','m','c_damp',
@@ -289,7 +246,7 @@ def continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate, kwa
     keys =['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_t_e'
             ,'k_T','k_ij','k_ij_pad','k_j','k_a','k_a_pad','c_a','m','c_damp',
             'n_0','l_0','spacing']
-    keys_electric = ['D','a','k','epsilon_0','mu_1','mu_2']
+
     params_true = dict(zip(keys,params))
     params_low = {key: value - value*tol for key, value in params_true.items()}
     params_high = {key: value + value*tol for key, value in params_true.items()}
@@ -297,26 +254,22 @@ def continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate, kwa
     params_low['k_ij_pad'], params_high['k_ij_pad'] = params_true['k_ij_pad'],params_true['k_ij_pad']
     params_low['k_a_pad'], params_high['k_a_pad'] = params_true['k_a_pad'],params_true['k_a_pad']
     params_low['delta_t_e'], params_high['delta_t_e'] = params_true['delta_t_e'],params_true['delta_t_e']
-    for key in keys_electric:
-        params_low[key],params_high[key] = params_true[key]- params_true[key] * tol_AP, params_true[key] + params_true[key] * tol_AP
 
     u0,v0,T0,x0,x_dot0,t_evals = Simulation_MSD.ys['u'][0,-1],Simulation_MSD.ys['v'][0,-1],Simulation_MSD.ys['T'][0,-1],Simulation_MSD.ys['x'][0,-1],Simulation_MSD.ys['x_dot'][0,-1],np.linspace(0, params_true['delta_t_e']*sampling_rate*length, length)
     kwargs_sys = {'size': 100,
                 'spacing': 1,
                 'N_sys': 1,
                 'par_tol': 0,
+                'params_true': params_true,
                 'n_dist':kwargs_training['n_dist'],
                 'eta_var':kwargs_training['eta_var'],
-                'params_true': params_true,
                 'u0': u0,'v0': v0,'T0': T0,'x0': x0,'x_dot0': x_dot0}
-    kwargs_adoptODE = {'epochs': 10,'N_backups': 1,'lr': 1e-3,'lower_b': params_true,'upper_b': params_true,
-                    'lower_b_y0':{'u':u0,'v':v0,'T':T0,'x':x0,'x_dot':x_dot0},
-                    'upper_b_y0':{'u':u0,'v':v0,'T':T0,'x':x0,'x_dot':x_dot0}}
+    kwargs_adoptODE = {'epochs': 10,'N_backups': 1,'lr': 1e-3}
     Simulation_MSD_2 = simple_simulation(define_MSD,
-                                    t_evals,
-                                    kwargs_sys,
-                                    kwargs_adoptODE)
-    
+                                t_evals,
+                                kwargs_sys,
+                                kwargs_adoptODE)
+
     x_tar,x_dot_tar =  Simulation_MSD_2.ys['x'],Simulation_MSD_2.ys['x_dot']    
     if keep_data == True:
         u_tar,v_tar,T_tar = jnp.broadcast_to(dataset_MSD.ys_sol['u'][0,-1],(1,length,100,100)),jnp.broadcast_to(dataset_MSD.ys_sol['v'][0,-1],(1,length,100,100)),jnp.broadcast_to(dataset_MSD.ys_sol['T'][0,-1],(1,length,100,100))
@@ -325,74 +278,46 @@ def continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate, kwa
         targets = {'u':jnp.full((Simulation_MSD.ys['u'].shape),.5),'v': jnp.zeros_like(Simulation_MSD.ys['v']),'T':jnp.zeros_like(Simulation_MSD.ys['T']),
                 'x':Simulation_MSD_2.ys['x'],'x_dot':Simulation_MSD_2.ys['x_dot']}
     
-    for run_ipar in range(1,kwargs_training['N_sys']):
-        u0,v0,T0,x0,x_dot0,t_evals = Simulation_MSD_2.ys['u'][0,-1],Simulation_MSD_2.ys['v'][0,-1],Simulation_MSD_2.ys['T'][0,-1],Simulation_MSD_2.ys['x'][0,-1],Simulation_MSD_2.ys['x_dot'][0,-1],np.linspace(0, params_true['delta_t_e']*sampling_rate*length, length)
-        kwargs_sys = {'size': 100,
-                    'spacing': 1,
-                    'N_sys': 1,
-                    'par_tol': 0,
-                    'params_true': params_true,
-                    'n_dist':kwargs_training['n_dist'],
-                    'eta_var':kwargs_training['eta_var'],
-                    'u0': u0,'v0': v0,'T0': T0,'x0': x0,'x_dot0': x_dot0}
-        kwargs_adoptODE = {'epochs': 10,'N_backups': 1,'lr': 1e-3}
-        Simulation_MSD_2 = simple_simulation(define_MSD,
-                                    t_evals,
-                                    kwargs_sys,
-                                    kwargs_adoptODE)
 
-        x_tar,x_dot_tar =  Simulation_MSD_2.ys['x'],Simulation_MSD_2.ys['x_dot']    
-        if keep_data == True:
-            u_tar,v_tar,T_tar = jnp.broadcast_to(dataset_MSD.ys_sol['u'][run_ipar,-1],(1,length,100,100)),jnp.broadcast_to(dataset_MSD.ys_sol['v'][run_ipar,-1],(1,length,100,100)),jnp.broadcast_to(dataset_MSD.ys_sol['T'][run_ipar,-1],(1,length,100,100))
-            targets = {'u':jnp.concatenate((targets['u'],u_tar),axis=0),'T':jnp.concatenate((targets['T'],T_tar),axis=0), 'v':jnp.concatenate((targets['v'],v_tar),axis=0),
-                        'x':jnp.concatenate((targets['x'],x_tar),axis=0),'x_dot':jnp.concatenate((targets['x_dot'],x_dot_tar),axis=0)}
-        else:
-            targets = {'u':jnp.concatenate((targets['u'],jnp.full((Simulation_MSD.ys['u'].shape),.5)),axis=0),'v': jnp.concatenate((targets['v'],jnp.zeros_like(Simulation_MSD.ys['v'])),axis=0),'T':jnp.concatenate((targets['T'],jnp.zeros_like(Simulation_MSD.ys['T'])),axis=0),
-                    'x':jnp.concatenate((targets['x'],x_tar),axis=0),'x_dot':jnp.concatenate((targets['x_dot'],x_dot_tar),axis=0)}
-    
     if keep_params == True:
-        params_true = dataset_MSD.params
-        params_train = dataset_MSD.params_train
+        par = dataset_MSD.params_train
         par_tol = 0.2
         if kwargs_training['eta_var'] == True:
-            params_gaussian_low = {'Amp'+str(i)+str(j):-1 for i in range(kwargs_training['n_gaussians']) for j in range(kwargs_training['n_gaussians'])}
-            params_gaussian_high = {'Amp'+str(i)+str(j):1 for i in range(kwargs_training['n_gaussians']) for j in range(kwargs_training['n_gaussians'])}
+            params_gaussian = {'Amp'+str(i)+str(j):0.1 for i in range(3) for j in range(3)}
+            params_gaussian_low = {'Amp'+str(i)+str(j):-1 for i in range(3) for j in range(3)}
+            params_gaussian_high = {'Amp'+str(i)+str(j):1 for i in range(3) for j in range(3)}
+            params_true = params_true|params_gaussian
             params_low = params_low|params_gaussian_low
             params_high = params_high|params_gaussian_high
     else:
-        params_train = params_true
+        par = params_true
         par_tol = tol
         if kwargs_training['eta_var'] == True:
-            params_gaussian = {'Amp'+str(i)+str(j):0.1 for i in range(kwargs_training['n_gaussians']) for j in range(kwargs_training['n_gaussians'])}
-            params_gaussian_low = {'Amp'+str(i)+str(j):-1 for i in range(kwargs_training['n_gaussians']) for j in range(kwargs_training['n_gaussians'])}
-            params_gaussian_high = {'Amp'+str(i)+str(j):1 for i in range(kwargs_training['n_gaussians']) for j in range(kwargs_training['n_gaussians'])}
+            params_gaussian = {'Amp'+str(i)+str(j):0.1 for i in range(3) for j in range(3)}
+            params_gaussian_low = {'Amp'+str(i)+str(j):-1 for i in range(3) for j in range(3)}
+            params_gaussian_high = {'Amp'+str(i)+str(j):1 for i in range(3) for j in range(3)}
             params_true = params_true|params_gaussian
             params_low = params_low|params_gaussian_low
             params_high = params_high|params_gaussian_high
         
 
     kwargs_sys = {'size': 100,
-                'N_sys': kwargs_training['N_sys'],
+                'N_sys': 1,
                 'par_tol': par_tol,
                 'eta_var':kwargs_training['eta_var'],
-                'params_true': params_train,
+                'params_true': par,
                 'n_gaussians':kwargs_training['n_gaussians']}
     
     kwargs_adoptODE = {'epochs': kwargs_training['epochs'],'N_backups': kwargs_training['N_backups'],'lr':kwargs_training['lr'],'lower_b': params_low,'upper_b': params_high,
                     'lr_y0':kwargs_training['lr_y0'],
-                    # 'lr_ip': kwargs_training['lr_ip'],
                     'lower_b_y0':{'u':kwargs_training['u_low'],'v':kwargs_training['v_low'],'T':kwargs_training['T_low'],'x':x_tar[0,0],'x_dot':x_dot_tar[0,0]},
                     'upper_b_y0':{'u':kwargs_training['u_high'],'v':kwargs_training['v_high'],'T':kwargs_training['T_high'],'x':x_tar[0,0],'x_dot':x_dot_tar[0,0]}}
-    # print(kwargs_adoptODE)
-    # if 'multi_measurement_constraint' in kwargs_training:
-    #     kwargs_adoptODE = kwargs_adoptODE|{'multi_measurement_constraint':kwargs_training['multi_measurement_constraint']}
     dataset_MSD_2 = dataset_adoptODE(define_MSD_rec,
                                     targets,
                                     t_evals, 
                                     kwargs_sys,
                                     kwargs_adoptODE,
-                                    true_params=params_true)#,
-                                    # true_iparams=params_true)
+                                    true_params=params_true)
     return dataset_MSD_2, Simulation_MSD_2
 
 def save_run(run, Simulation, dataset, length, sampling_rate,tol,keep_data,keep_params,eta_var):
@@ -401,10 +326,9 @@ def save_run(run, Simulation, dataset, length, sampling_rate,tol,keep_data,keep_
     for key in dataset.params.keys():
         print(key+(16-len(key))*' '+'{:.3f}         {:-3f}'.format(dataset.params[key], dataset.params_train[key]),'rel err',np.abs(dataset.params[key]-dataset.params_train[key])/dataset.params[key])
     
-    
     file_path = (
         f"../data/SpringMassModel/EtaSweep/"
-        f"FullDomain_len{length}_lr{sampling_rate}_tol0{str(tol).split('.')[1]}_"
+        f"FullDomain_len{length}_lr{sampling_rate}_tol{tol}_"
         f"keepdata{keep_data}_keepparams{keep_params}_etavar{eta_var}.h5"
     )
 
@@ -421,7 +345,7 @@ def save_run(run, Simulation, dataset, length, sampling_rate,tol,keep_data,keep_
         params = group.create_group("params_train")  # Create a subgroup
         for key, value in dataset.params_train.items():
             params.attrs[key] = value  # Store values as attributes
-    f.close()
+
     print(f"Data for run '{run}' has been successfully added/updated.")
     
 def save_new_run(run, Simulation, dataset, length, sampling_rate,tol,keep_data,keep_params,eta_var):
@@ -431,18 +355,17 @@ def save_new_run(run, Simulation, dataset, length, sampling_rate,tol,keep_data,k
     for key in dataset.params.keys():
         print(key + (16 - len(key)) * ' ' + '{:.3f}         {:-3f}'.format(dataset.params[key], dataset.params_train[key]),
               'rel err', np.abs(dataset.params[key] - dataset.params_train[key]) / dataset.params[key])
-    
     file_path = (
         f"../data/SpringMassModel/EtaSweep/"
-        f"FullDomain_len{length}_lr{sampling_rate}_tol0{str(tol).split('.')[1]}_"
+        f"FullDomain_len{length}_lr{sampling_rate}_tol{tol}_"
         f"keepdata{keep_data}_keepparams{keep_params}_etavar{eta_var}.h5"
     )
     with h5py.File(file_path, 'a') as f:  # Open the file in append mode ('a')
         # Check if the group already exists; if not, create it
-        if run not in f:
-            group = f.create_group(run)  # Create the group for the run
-        else:
-            group = f[run]  # Access the existing group
+        # if run not in f:
+        group = f.create_group(run)  # Create the group for the run
+        # else:
+        #     group = f[run]  # Access the existing group
 
         # Create or update datasets
         group.create_dataset('u_sol', data=dataset.ys_sol['u'])
@@ -468,9 +391,8 @@ def save_new_run(run, Simulation, dataset, length, sampling_rate,tol,keep_data,k
 
 
 n_dist = np.load('../data/SpringMassModel/FiberOrientation/fiber_orientation.npy')
-kwargs_training = {'epochs': 30,'N_backups': 5,
-                    'lr': 2e-3,'lr_y0':2e-2, 
-                    # 'lr_ip':1e-3,
+kwargs_training = {'epochs': 200,'N_backups': 5,
+                    'lr': 1e-2,'lr_y0':3e-2, 
                     'u_low':0,'u_high':99,
                     'v_low':0,'v_high':np.max(v),
                     'T_low':0,'T_high':np.max(T),
@@ -479,25 +401,22 @@ kwargs_training = {'epochs': 30,'N_backups': 5,
                     'n_gaussians':3,
                     'N_sys':1}
 #start initial Dataset and train
-length = 5
+length = 10
 tol = 0.99
-sampling_rate = 15
+sampling_rate = 10
 dataset_MSD,Simulation_MSD = initial_dataset(length , tol, sampling_rate,kwargs_training)
-print('start training')
 params_final, losses, errors, params_history = train_adoptODE(dataset_MSD, print_interval=10, save_interval=10)
-
 keep_data = True
 keep_params = True
+
 run = 'run0'
 save_run(run, Simulation_MSD ,dataset_MSD, length, sampling_rate,tol,keep_data,keep_params,kwargs_training['eta_var'])
 
 #continue training
 for i in range(1,5):
-    # overwrite old simulation and dataset with new one
-    print(length,tol,sampling_rate,i)
-    tol_AP = 1 - .2*i
-    dataset_MSD,Simulation_MSD = continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate,kwargs_training,tol_AP,keep_data= keep_data,keep_params=keep_params)
+    #overwrite old simulation and dataset with new one
+    dataset_MSD,Simulation_MSD = continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate,kwargs_training,keep_data= keep_data,keep_params=keep_params)
     params_final, losses, errors, params_history = train_adoptODE(dataset_MSD, print_interval=10, save_interval=10)
     run = 'run'+str(i)
-    save_new_run(run, Simulation_MSD, dataset_MSD, length, sampling_rate,tol,keep_data,keep_params,kwargs_training['eta_var'])
-
+    print(run)
+    # save_new_run(run, Simulation_MSD, dataset_MSD, length, sampling_rate,tol,keep_data,keep_params,kwargs_training['eta_var'])

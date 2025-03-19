@@ -24,7 +24,20 @@ def read_config(variables, mode='chaos',file='config.ini'):
     sample_rate = float(config[mode]['sample_rate'])
     N = int((N_max - N_output)/sample_rate)
     return N,size,variables
+
+def expand_dict_arrays(data_dict, N_sys):
+    """
+    Expands each array in the dictionary along the first axis to shape (N_sys, ...).
     
+    Parameters:
+    - data_dict (dict): Dictionary with arrays of shape (1, ...)
+    - N_sys (int): Number of copies along the first axis
+
+    Returns:
+    - expanded_dict (dict): Dictionary with arrays of shape (N_sys, ...)
+    """
+    return {key: np.tile(arr, (N_sys, *[1] * (arr.ndim - 1))) for key, arr in data_dict.items()}
+
 def read_scalar(file,shape_of_data):
     #reads the data that is produced by PrintArray from file arrayhandling.c
     data = np.empty(shape_of_data)
