@@ -186,11 +186,11 @@ def multi_meas_constraint(ys, params, iparams, exparams, ys_target):
 def initial_dataset(length, tol, sampling_rate,kwargs_training):
     '''makes initial simulation from uvx data and returns dataset for training'''
     # Read the config file
-    N,size,params = read_config(['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_t_e'
+    N,size,params = read_config(['D','a','k','epsilon_0','mu_1','mu_2','delta_t_e'
                                 ,'k_T','k_ij','k_ij_pad','k_j','k_a','k_a_pad','c_a','m','c_damp',
                                 'n_0','l_0','spacing'],mode = 'chaos')
 
-    keys =['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_t_e'
+    keys =['D','a','k','epsilon_0','mu_1','mu_2','delta_t_e'
             ,'k_T','k_ij','k_ij_pad','k_j','k_a','k_a_pad','c_a','m','c_damp',
             'n_0','l_0','spacing']
 
@@ -282,11 +282,11 @@ def initial_dataset(length, tol, sampling_rate,kwargs_training):
 
 def continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate, kwargs_training, tol_AP, keep_data = True ,keep_params = True):
     # Read the config file
-    N,size,params = read_config(['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_t_e'
+    N,size,params = read_config(['D','a','k','epsilon_0','mu_1','mu_2','delta_t_e'
                                 ,'k_T','k_ij','k_ij_pad','k_j','k_a','k_a_pad','c_a','m','c_damp',
                                 'n_0','l_0','spacing'],mode = 'chaos')
 
-    keys =['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_t_e'
+    keys =['D','a','k','epsilon_0','mu_1','mu_2','delta_t_e'
             ,'k_T','k_ij','k_ij_pad','k_j','k_a','k_a_pad','c_a','m','c_damp',
             'n_0','l_0','spacing']
     keys_electric = ['D','a','k','epsilon_0','mu_1','mu_2']
@@ -468,7 +468,7 @@ def save_new_run(run, Simulation, dataset, length, sampling_rate,tol,keep_data,k
 
 
 n_dist = np.load('../data/SpringMassModel/FiberOrientation/fiber_orientation.npy')
-kwargs_training = {'epochs': 30,'N_backups': 5,
+kwargs_training = {'epochs': 300,'N_backups': 5,
                     'lr': 2e-3,'lr_y0':2e-2, 
                     # 'lr_ip':1e-3,
                     'u_low':0,'u_high':99,
@@ -479,7 +479,7 @@ kwargs_training = {'epochs': 30,'N_backups': 5,
                     'n_gaussians':3,
                     'N_sys':1}
 #start initial Dataset and train
-length = 5
+length = 15
 tol = 0.99
 sampling_rate = 15
 dataset_MSD,Simulation_MSD = initial_dataset(length , tol, sampling_rate,kwargs_training)
