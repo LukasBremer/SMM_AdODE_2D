@@ -1,6 +1,6 @@
 #import jax and other libraries for computation
 import jax.numpy as jnp
-from jax import jit
+from jax import jit, vmap
 from jax.scipy.signal import convolve2d
 from jax.flatten_util import ravel_pytree
 from jax.experimental.ode import odeint
@@ -372,42 +372,6 @@ def enforce_T_and_pad(T, xy_grid):
     
     return jnp.reshape(T_padded, (1,T_padded.shape[0], T_padded.shape[1]))
 
-#for visualization
-def compute_dA(x, A_undeformed):
-    """
-    Computes the relative area change for a time series of quadrilateral meshes.
-
-    Parameters:
-    x : ndarray of shape (T, 2, H, M)
-        Time series of x and y coordinate grids.
-    A_undeformed : float
-        The reference (undeformed) area.
-
-    Returns:
-    dA : ndarray of shape (T, H-1, M-1)
-        The relative area change over time.
-    """
-
-    # Compute edge lengths (vectorized over time T)
-    a = np.linalg.norm(x[:, :, 1:, 1:] - x[:, :, 1:, :-1], axis=1)  # Right edge
-    b = np.linalg.norm(x[:, :, 1:, 1:] - x[:, :, :-1, 1:], axis=1)  # Top edge
-    c = np.linalg.norm(x[:, :, :-1, 1:] - x[:, :, :-1, :-1], axis=1)  # Left edge
-    d = np.linalg.norm(x[:, :, 1:, :-1] - x[:, :, :-1, :-1], axis=1)  # Bottom edge
-
-    # Compute diagonal lengths
-    diagonal1 = np.linalg.norm(x[:, :, :-1, 1:] - x[:, :, 1:, :-1], axis=1)  # Top-left to bottom-right
-    diagonal2 = np.linalg.norm(x[:, :, 1:, 1:] - x[:, :, :-1, :-1], axis=1)  # Top-right to bottom-left
-
-    # Compute helper term
-    hlp = (b**2 + d**2 - a**2 - c**2)
-
-    # Compute deformed area using the determinant formula
-    A_deformed = np.sqrt(4 * diagonal1**2 * diagonal2**2 - hlp**2) / 4
-
-    # Compute relative area change
-    dA = A_deformed / A_undeformed - 1
-
-    return dA
 #for fiber orientation
 @jit
 def gaussian_2d(x0, y0, amplitude, sigma = 1):
@@ -449,3 +413,61 @@ def get_n_dist(n_dict,params):
     # Populate the array using indexed assignment
     n_distr_reconstructed = n_distr_reconstructed.at[indices[:, 0], indices[:, 1]].set(values)
     return n_distr_reconstructed
+
+#for loss and visualization 
+
+@jit
+def laplacian_filter(time_series):
+    """Applies a Laplacian filter to an entire time series (T, domain_size, domain_size)."""
+    # Define Laplacian kernel
+    kernel = jnp.array([[0,  1,  0],
+                         [1, -4,  1],
+                         [0,  1,  0]])
+
+    def laplacian_filter_2d(image):
+        """Applies a Laplacian filter to a single 2D frame."""
+        # Manually pad image with edge replication
+        padded_image = jnp.pad(image, pad_width=1, mode='edge')
+
+        # Apply convolution (JAX only supports 'fill' boundary mode)
+        return convolve2d(padded_image, kernel, mode="valid", boundary="fill", fillvalue=0)
+
+    # Vectorize over time dimension (T)
+    return vmap(laplacian_filter_2d, in_axes=0, out_axes=0)(time_series)
+
+@jit
+def compute_dA(x, A_undeformed):
+    """
+    Computes the relative area change for a time series of quadrilateral meshes.
+
+    Parameters:
+    x : ndarray of shape (T, 2, H, M)
+        Time series of x and y coordinate grids.
+    A_undeformed : float
+        The reference (undeformed) area.
+
+    Returns:
+    dA : ndarray of shape (T, H-1, M-1)
+        The relative area change over time.
+    """
+
+    # Compute edge lengths (vectorized over time T)
+    a = jnp.linalg.norm(x[:, :, 1:, 1:] - x[:, :, 1:, :-1], axis=1)  # Right edge
+    b = jnp.linalg.norm(x[:, :, 1:, 1:] - x[:, :, :-1, 1:], axis=1)  # Top edge
+    c = jnp.linalg.norm(x[:, :, :-1, 1:] - x[:, :, :-1, :-1], axis=1)  # Left edge
+    d = jnp.linalg.norm(x[:, :, 1:, :-1] - x[:, :, :-1, :-1], axis=1)  # Bottom edge
+
+    # Compute diagonal lengths
+    diagonal1 = jnp.linalg.norm(x[:, :, :-1, 1:] - x[:, :, 1:, :-1], axis=1)  # Top-left to bottom-right
+    diagonal2 = jnp.linalg.norm(x[:, :, 1:, 1:] - x[:, :, :-1, :-1], axis=1)  # Top-right to bottom-left
+
+    # Compute helper term
+    hlp = (b**2 + d**2 - a**2 - c**2)
+
+    # Compute deformed area using the determinant formula
+    A_deformed = jnp.sqrt(4 * diagonal1**2 * diagonal2**2 - hlp**2) / 4
+
+    # Compute relative area change
+    dA = A_deformed / A_undeformed - 1
+
+    return dA
