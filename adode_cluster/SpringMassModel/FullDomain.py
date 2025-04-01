@@ -186,11 +186,11 @@ def multi_meas_constraint(ys, params, iparams, exparams, ys_target):
 def initial_dataset(length, tol, sampling_rate,kwargs_training):
     '''makes initial simulation from uvx data and returns dataset for training'''
     # Read the config file
-    N,size,params = read_config(['D','a','k','epsilon_0','mu_1','mu_2','delta_t_e'
+    N,size,params = read_config(['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_t_e'
                                 ,'k_T','k_ij','k_ij_pad','k_j','k_a','k_a_pad','c_a','m','c_damp',
                                 'n_0','l_0','spacing'],mode = 'chaos')
 
-    keys =['D','a','k','epsilon_0','mu_1','mu_2','delta_t_e'
+    keys =['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_t_e'
             ,'k_T','k_ij','k_ij_pad','k_j','k_a','k_a_pad','c_a','m','c_damp',
             'n_0','l_0','spacing']
 
@@ -282,14 +282,16 @@ def initial_dataset(length, tol, sampling_rate,kwargs_training):
 
 def continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate, kwargs_training, tol_AP, keep_data = True ,keep_params = True):
     # Read the config file
-    N,size,params = read_config(['D','a','k','epsilon_0','mu_1','mu_2','delta_t_e'
+    N,size,params = read_config(['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_t_e'
                                 ,'k_T','k_ij','k_ij_pad','k_j','k_a','k_a_pad','c_a','m','c_damp',
                                 'n_0','l_0','spacing'],mode = 'chaos')
 
-    keys =['D','a','k','epsilon_0','mu_1','mu_2','delta_t_e'
+    keys =['D','a','k','epsilon_0','mu_1','mu_2','k_T','delta_t_e'
             ,'k_T','k_ij','k_ij_pad','k_j','k_a','k_a_pad','c_a','m','c_damp',
             'n_0','l_0','spacing']
-    keys_electric = ['D','a','k','epsilon_0','mu_1','mu_2']
+    
+    keys_electric = ['a','k']#,'epsilon_0','mu_1','mu_2']
+    
     params_true = dict(zip(keys,params))
     params_low = {key: value - value*tol for key, value in params_true.items()}
     params_high = {key: value + value*tol for key, value in params_true.items()}
@@ -353,7 +355,7 @@ def continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate, kwa
     if keep_params == True:
         params_true = dataset_MSD.params
         params_train = dataset_MSD.params_train
-        par_tol = 0.2
+        par_tol = 0.1
         if kwargs_training['eta_var'] == True:
             params_gaussian_low = {'Amp'+str(i)+str(j):-1 for i in range(kwargs_training['n_gaussians']) for j in range(kwargs_training['n_gaussians'])}
             params_gaussian_high = {'Amp'+str(i)+str(j):1 for i in range(kwargs_training['n_gaussians']) for j in range(kwargs_training['n_gaussians'])}
@@ -466,7 +468,6 @@ def save_new_run(run, Simulation, dataset, length, sampling_rate,tol,keep_data,k
     f.close()
     print(f"Data for run '{run}' has been successfully added/updated.")
 
-
 n_dist = np.load('../data/SpringMassModel/FiberOrientation/fiber_orientation.npy')
 kwargs_training = {'epochs': 300,'N_backups': 5,
                     'lr': 2e-3,'lr_y0':2e-2, 
@@ -476,7 +477,7 @@ kwargs_training = {'epochs': 300,'N_backups': 5,
                     'T_low':0,'T_high':np.max(T),
                     'eta_var':True,
                     'n_dist':n_dist,
-                    'n_gaussians':3,
+                    'n_gaussians':4,
                     'N_sys':1}
 #start initial Dataset and train
 length = 15
@@ -492,10 +493,13 @@ run = 'run0'
 save_run(run, Simulation_MSD ,dataset_MSD, length, sampling_rate,tol,keep_data,keep_params,kwargs_training['eta_var'])
 
 #continue training
-for i in range(1,5):
+for i in range(1,10):
     # overwrite old simulation and dataset with new one
     print(length,tol,sampling_rate,i)
-    tol_AP = 1 - .2*i
+    # tol_AP = 1 - .2*i
+    # if tol_AP < 0:
+    #     tol_AP = 0
+    tol_AP = tol
     dataset_MSD,Simulation_MSD = continue_dataset(dataset_MSD,Simulation_MSD, length, tol, sampling_rate,kwargs_training,tol_AP,keep_data= keep_data,keep_params=keep_params)
     params_final, losses, errors, params_history = train_adoptODE(dataset_MSD, print_interval=10, save_interval=10)
     run = 'run'+str(i)
