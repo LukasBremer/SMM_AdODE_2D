@@ -22,7 +22,7 @@ parser.add_argument('nr', type=str)
 parser.add_argument('start_indx',type=int)
 args = parser.parse_args()
 
-print('start program')
+print('start subscript')
 
 i,j = 5 + args.i * 10 ,5 + args.j * 10
 
@@ -116,28 +116,26 @@ def sm_model(**kwargs_sys):
 
 # Load from HDF5
 with h5py.File('../data/SpringMassModel/MechanicalData/data_eta_var_xl.h5', 'r') as f:
-    x_temp = f['x_temp'][:]
-    x_cm_temp = f['x_cm_temp'][:]
+    x_temp = f['x'][:]
+    x_cm_temp = f['x_cm'][:]
     T = f['T'][:]
     dA = f['dA'][:]
     f.close()
+print(x_temp.shape)
 print('loaded data')
 
-N,size,ls = read_config(["l_0","c_a","k_ij","k_j","k_a","m","c_damp","n_0","delta_t_m","it_m","pad"])
+N,size,ls = read_config(["l_0","c_a","k_ij","k_j","k_a","m","c_damp","n_0","delta_t_m","it_m","pad"],mode='chaos')
 N = T.shape[0]
 l_0, c_a0, k_g0, k_p0, k_a0, m0, nu0, eta0, delta_t_m, it_m, pad = ls
 eta_arr = 1 - np.load('../data/SpringMassModel/FiberOrientation/fiber_orientation.npy')
 eta0,eta1,eta2,eta3= eta_arr[i-1,j-1],eta_arr[i-1,j],eta_arr[i,j],eta_arr[i,j-1]
-
 real_params = {'l_g':l_0,'k_g':k_g0,'k_p':k_p0,'k_a':k_a0,'m':m0,'nu':nu0,'eta0':eta0,'eta1':eta1,'eta2':eta2,'eta3':eta3,'c_a': c_a0 }#,'dt':0}
-
 delta_t = delta_t_m * it_m
 t_evals = np.linspace(0,N*delta_t,N)
 N_interp = int(it_m)*5
-
 t_start_training,t_stop_training = 0,12000#T.shape[0]-3500
 diff = 0
-start_indx = 0
+start_indx = args.start_indx
 while diff < 900: 
     dA_test = dA[t_stop_training+500:,i,j]
     T_test = T[t_stop_training+500:,i,j]
@@ -149,7 +147,6 @@ while diff < 900:
     
     t_start = t_stop_training + 500 + maxima_temp0[max_indx] - 400
     t_stop = t_stop_training + 500+ minima_temp0[min_indx+1] + 800
-
 # dA_test = dA[t_stop_training+500:,i,j]
 # T_test = T[t_stop_training+500:,i,j]
 # T_arr = np.array([T[:,i-1,j-1],T[:,i-1,j],T[:,i,j],T[:,i,j-1]])
@@ -165,7 +162,6 @@ while diff < 900:
 T_rec = np.zeros((4,t_stop-t_start))
 T_arr_indx = [[i-1,j-1],[i-1,j],[i,j],[i,j-1]]
 T_arr = np.array([T[:,i-1,j-1],T[:,i-1,j],T[:,i,j],T[:,i,j-1]])
-
 #define Hyperparameters for data reconstruction
 no_dt,no_points = 30,10
 delta_t_rec = 20
@@ -197,7 +193,7 @@ T_rec = T_rec[:,start:end]
 #arrays interpolieren
 t_interp, x_cm_interp = interpolate_x(x_cm,t_evals,N_interp)
 t_interp, x_j_interp = interpolate_x(x_j,t_evals,N_interp)
-t_interp, T_interp = interpolate_scalar(T_rec,t_evals,N_interp)
+t_interp, T_interp = interpolate_scalar(T_model,t_evals,N_interp)
 
 y0 = {"x1":x_i[0,0],'x2':x_i[0,1],'y1':(x_i[1,0]-x_i[0,0])/delta_t,'y2':(x_i[1,1]-x_i[0,1])/delta_t,'x_cm':x_cm[:,0,:],'x_j':x_j[:,0,:]}
 
@@ -261,7 +257,7 @@ for _ in range(3):
 
     params_final, losses, errors, params_history = train_adoptODE(dataset,save_interval=100)
     eta_local = np.array([float(dataset.params_train['eta0']),float(dataset.params_train['eta1']),float(dataset.params_train['eta2']),float(dataset.params_train['eta3'])])
-    eta_arr = np.load('../data/SpringMassModel/EtaSweep/eta_sweep'+args.nr+'.npy')
+    eta_arr = np.load('../data/SpringMassModel/EtaSweep/eta_sweep'+args.nr+'.npy',allow_pickle=True)
     
     if float(losses[-1][0]) < loss:
         eta_arr[args.i,args.j,0] = dataset.params_train
