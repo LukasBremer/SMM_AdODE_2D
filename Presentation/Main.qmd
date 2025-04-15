@@ -1,2 +1,54 @@
-# Test
-o
+---
+title: "Quarto Presentations"
+subtitle: "Create beautiful interactive slide decks with Reveal.js"
+format:
+  revealjs: 
+    slide-number: true
+    preview-links: auto
+    css: styles.css
+    footer: '[https://quarto.org](https://quarto.org)'
+embed-resources: True
+width: 1500
+scrollable: true
+---
+
+## Hello, There
+
+This presentation will show you examples of what you can do with Quarto and [Reveal.js](https://revealjs.com), including:
+
+::: incremental
+-   Presenting code and LaTeX equations
+-   Including computations in slide output
+-   Image, video, and iframe backgrounds
+-   Fancy transitions and animations
+-   Activating scroll view
+:::
+
+...and much more
+
+::: footer
+new footer
+:::
+
+## test code
+
+```{python}
+#| echo: True
+import matplotlib.pyplot as plt
+from plotting import * 
+
+make_plot()
+```
+
+## Slide Background {background="#1244aa"}
+
+![](images/test.jpg){.absolute .fragment bottom="110" rigth="12" left="23" fragment-index=0}
+
+
+## 🎬 tachycardia
+
+<video controls width="700">
+  <source src="videos/spiral.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
