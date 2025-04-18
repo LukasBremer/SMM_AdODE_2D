@@ -9,7 +9,7 @@ format:
     css: styles.css
     footer: '[https://quarto.org](https://quarto.org)'
 embed-resources: True
-width: 1200
+width: 1500
 scrollable: true
 ---
 
@@ -34,7 +34,6 @@ Introduction
   <strong>1️⃣ Sinus Rhythm</strong><br>
   <video controls width="400">
     <source src="videos/sinus.mp4" type="video/mp4">
-    Your browser does not support the video tag.
   </video>
 </div>
 
@@ -42,7 +41,6 @@ Introduction
   <strong>2️⃣ Scroll Wave</strong><br>
   <video controls width="400">
     <source src="videos/spiral.mp4" type="video/mp4">
-    Your browser does not support the video tag.
   </video>
 </div>
 
@@ -50,7 +48,6 @@ Introduction
   <strong>3️⃣ Chaotic Activity</strong><br>
   <video controls width="400">
     <source src="videos/chaos.mp4" type="video/mp4">
-    Your browser does not support the video tag.
   </video>
 </div>
 
@@ -60,17 +57,92 @@ Introduction
 Introduction 
 :::
 
+## Goals of my Thesis
 
-## test code
+::: incremental
+-   Make Cardiac Model
+-   Mechanics as Observation
+-   Reconstruct tissue properties
+-   Reconstruct electric signal
+:::
 
-```{python}
-#| echo: True
-import matplotlib.pyplot as plt
-from plotting import * 
+::: footer
+Introduciton
+:::
 
-make_plot()
-```
+##
+
+<div style="text-align: center;">
+  <img src="images/MakeACardiacModel/electricmechanic.png" style="width: 80%; margin: 30px auto;" />
+</div>
+
+::: footer
+Make a Cardiac Model
+:::
+
+## Aliev-Panfilov Model
+
+equations
+
+::: footer
+Make a Cardiac Model 
+:::
+
+## Aliev-Panfilov Model
+
+equations
+
+::: footer
+Make a Cardiac Model 
+:::
+
+## Aliev-Panfilov Model
+
+<div style="text-align: center;">
+  <video controls width="1200">
+    <source src="videos/AP_simulation.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
+
+::: footer
+Make a Cardiac Model 
+:::
+
+## Mass Spring Damper System
+
+![](images/MakeACardiacModel/MSD_2D.png){bottom="15" rigth="15" left="15"}
+
+::: footer
+Make a Cardiac Model
+:::
+
+## Aliev-Panfilov Model
+
+<div style="text-align: center;">
+  <video controls width="1000">
+    <source src="videos/AP_4panel_animation.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
+
+::: footer
+Make a Cardiac Model 
+:::
+
+## AdoptODE
+
+::: footer
+Methods
+:::
+
+## Results
+
+::: footer
+Results
+:::
 
 ## Slide Background {background="#1244aa"}
 
 ![](images/test.jpg){.absolute .fragment bottom="110" rigth="12" left="23" fragment-index=0}
+
