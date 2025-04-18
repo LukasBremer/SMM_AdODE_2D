@@ -74,12 +74,3 @@ make_plot()
 ## Slide Background {background="#1244aa"}
 
 ![](images/test.jpg){.absolute .fragment bottom="110" rigth="12" left="23" fragment-index=0}
-
-
-## 🎬 tachycardia
-
-<video controls width="700">
-  <source src="videos/spiral.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
