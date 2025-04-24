@@ -1,6 +1,6 @@
 ---
-title: "Reconstructing Parameter of Cardiac Models Based on mechanical Information."
-subtitle: "Master Thesis"
+title: "Master Thesis"
+subtitle: "Reconstructing Parameter of Cardiac Models Based on Mechanical Information."
 author: "Lukas Bremer"
 format:
   revealjs: 
@@ -8,46 +8,58 @@ format:
     preview-links: auto
     css: styles.css
     footer: '[https://quarto.org](https://quarto.org)'
-embed-resources: True
-width: 1500
-scrollable: true
+# embed-resources: True
+# width: 1500
+# scrollable: true
 ---
 
-## 💔 Cardiac Deseases
-
-This presentation will show you examples of what you can do with Quarto and [Reveal.js](https://revealjs.com), including:
-
-
-...and much more
-
-::: footer
-Introduction 
-:::
-
-## ❤️ Heart function
-
-- Electric Signal → Muscle Contraction
+## ❤️💔Heart function
 
 <div style="display: flex; gap: 16px; justify-content: center; align-items: flex-start;">
 
 <div style="text-align: center;">
-  <strong>1️⃣ Sinus Rhythm</strong><br>
-  <video controls width="400">
+  <strong> Sinus Rhythm</strong><br>
+  <video controls width="500">
     <source src="videos/sinus.mp4" type="video/mp4">
   </video>
 </div>
 
 <div style="text-align: center;">
-  <strong>2️⃣ Scroll Wave</strong><br>
-  <video controls width="400">
+  <strong> Tachycardia</strong><br>
+  <video controls width="500">
     <source src="videos/spiral.mp4" type="video/mp4">
   </video>
 </div>
 
 <div style="text-align: center;">
-  <strong>3️⃣ Chaotic Activity</strong><br>
-  <video controls width="400">
+  <strong> Fibrillation</strong><br>
+  <video controls width="500">
     <source src="videos/chaos.mp4" type="video/mp4">
+  </video>
+</div>
+
+</div>
+
+:::incremental
+- Electric Signal → Muscle Contraction
+:::
+
+
+## ❤️💔Heart function 
+
+<div style="display: flex; gap: 16px; justify-content: center; align-items: flex-start;">
+
+<div style="text-align: center;">
+  <strong> </strong><br>
+  <video width="500" height="500" controls>
+    <source src="videos/sinus_mouse.mp4" type="video/mp4">
+  </video>
+</div>
+
+<div style="text-align: center;">
+  <strong> </strong><br>
+  <video width="500" height="500" controls>
+    <source src="videos/fibrillation_mouse.mp4" type="video/mp4">
   </video>
 </div>
 
@@ -60,7 +72,7 @@ Introduction
 ## Goals of my Thesis
 
 ::: incremental
--   Make Cardiac Model
+-   Create a (minimal) Cardiac Model
 -   Mechanics as Observation
 -   Reconstruct tissue properties
 -   Reconstruct electric signal
@@ -70,11 +82,9 @@ Introduction
 Introduciton
 :::
 
-##
+## How do we create a minmal cardiac Model?
 
-<div style="text-align: center;">
-  <img src="images/MakeACardiacModel/electricmechanic.png" style="width: 80%; margin: 30px auto;" />
-</div>
+![](images/MakeACardiacModel/electricmechanic.png){bottom="15" rigth="50" left="50"}
 
 ::: footer
 Make a Cardiac Model
@@ -82,15 +92,11 @@ Make a Cardiac Model
 
 ## Aliev-Panfilov Model
 
-equations
-
-::: footer
-Make a Cardiac Model 
-:::
-
-## Aliev-Panfilov Model
-
-equations
+\begin{align}
+\frac{\partial u}{\partial t} &= \nabla(\mathbf{D} \cdot \nabla u) - k u(u - a)(u - 1) - u v \\ \label{eq: aliev panfilov 2}
+\frac{\partial v}{\partial t} &= \epsilon(u, v) \cdot (-v - k u(u - b - 1)) \\
+\epsilon(u, v) &= \epsilon_0 + \frac{\mu_1 v}{\mu_2 + u}
+\end{align}
 
 ::: footer
 Make a Cardiac Model 
@@ -99,7 +105,7 @@ Make a Cardiac Model
 ## Aliev-Panfilov Model
 
 <div style="text-align: center;">
-  <video controls width="1200">
+  <video controls width="1000">
     <source src="videos/AP_simulation.mp4" type="video/mp4">
     Your browser does not support the video tag.
   </video>
@@ -111,16 +117,37 @@ Make a Cardiac Model
 
 ## Mass Spring Damper System
 
+:::: {.columns}
+
+::: {.column width="50%"}
 ![](images/MakeACardiacModel/MSD_2D.png){bottom="15" rigth="15" left="15"}
+:::
+
+::: {.column width="50%"}
+
+<div style="font-size: 60%;">
+
+\begin{align}
+\\
+\\
+\mathbf{f}_{a,i}&=-k_{\mathrm{a}}\sum_j\left(\left\|\mathbf{q}_{j}-\mathbf{x}_{cm,i}\right\|-\frac{l_{f, 0}}{1+c_{f} \cdot T_{a}}\right) \cdot \mathbf{e}_{j} \eta_j \\ 
+&= -k_{\mathrm{a}}\sum_j\left(\left\|\mathbf{q}_{j}-\mathbf{x}_{cm,i}\right\|- l_a(t)\right) \cdot \mathbf{e}_{j} \eta_j.
+\end{align}
+
+</div>
+
+:::
+
+::::
 
 ::: footer
 Make a Cardiac Model
 :::
 
-## Aliev-Panfilov Model
+## Complete Model
 
 <div style="text-align: center;">
-  <video controls width="1000">
+  <video controls width="800">
     <source src="videos/AP_4panel_animation.mp4" type="video/mp4">
     Your browser does not support the video tag.
   </video>
