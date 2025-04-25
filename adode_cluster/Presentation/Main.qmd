@@ -13,7 +13,7 @@ format:
 # scrollable: true
 ---
 
-## ❤️💔Heart function
+## Heart function
 
 <div style="display: flex; gap: 16px; justify-content: center; align-items: flex-start;">
 
@@ -44,8 +44,11 @@ format:
 - Electric Signal → Muscle Contraction
 :::
 
+::: footer
+Introduction ❤️💔
+:::
 
-## ❤️💔Heart function 
+## Heart function 
 
 <div style="display: flex; gap: 16px; justify-content: center; align-items: flex-start;">
 
@@ -66,7 +69,7 @@ format:
 </div>
 
 ::: footer
-Introduction 
+Introduction ❤️💔
 :::
 
 ## Goals of my Thesis
@@ -125,15 +128,15 @@ Make a Cardiac Model
 
 ::: {.column width="50%"}
 
-<div style="font-size: 60%;">
+<div style="font-size: 55%;">
 
 \begin{align}
 \\
 \\
 \mathbf{f}_{a,i}&=-k_{\mathrm{a}}\sum_j\left(\left\|\mathbf{q}_{j}-\mathbf{x}_{cm,i}\right\|-\frac{l_{f, 0}}{1+c_{f} \cdot T_{a}}\right) \cdot \mathbf{e}_{j} \eta_j \\ 
-&= -k_{\mathrm{a}}\sum_j\left(\left\|\mathbf{q}_{j}-\mathbf{x}_{cm,i}\right\|- l_a(t)\right) \cdot \mathbf{e}_{j} \eta_j.
+&= -k_{\mathrm{a}}\sum_j\left(\left\|\mathbf{q}_{j}-\mathbf{x}_{cm,i}\right\|- l_a(t)\right) \cdot \mathbf{e}_{j} \eta_j \\
+\frac{\partial T_{a}}{\partial t} &= \epsilon_{T}(u) \cdot (k_{T} u - T_{a}).
 \end{align}
-
 </div>
 
 :::
@@ -163,13 +166,151 @@ Make a Cardiac Model
 Methods
 :::
 
-## Results
+## Isotropic Chaotic Domain
+
+![](images/Results/IsotropicFiberOrientationChaos/loss_curves.png){bottom="15" rigth="15" left="15" top="200"}
 
 ::: footer
 Results
 :::
 
-## Slide Background {background="#1244aa"}
+## Isotropic Chaotic Domain
 
-![](images/test.jpg){.absolute .fragment bottom="110" rigth="12" left="23" fragment-index=0}
+![](images/Results/IsotropicFiberOrientationChaos/u_err_heatmap.png){.absolute top="50" left="10" width="600"}
 
+
+![](images/Results/IsotropicFiberOrientationChaos/u_mse_over_time.png){.absolute .fragment top="70" left="620" width="400"}
+
+::: footer
+Results
+:::
+
+
+## Isotropic Chaotic Domain
+
+![](images/Results/IsotropicFiberOrientationChaos/violin_plotMechanicParameters.png){.absolute top="80" left="220" width="550"}
+
+
+![](images/Results/IsotropicFiberOrientationChaos/violin_plotElectricParameters.png){.absolute .fragment top="380" left="220" width="550"}
+
+::: footer
+Results
+:::
+
+## Isotropic Chaotic Domain
+
+![](images/Results/IsotropicFiberOrientationChaos/T_error_heatmap.png){.absolute top="50" left="220" width="600"}
+
+::: footer
+Results
+:::
+
+## Isotropic Chaotic Domain 
+True Electric Parameters
+![](images/Results/TrueElectricChaos/violin_plotMechanicParameters.png){.absolute top="130" left="220" width="550"}
+
+
+::: footer
+Results
+:::
+
+## Isotropic Chaotic Domain 
+True Electric Parameters
+
+![](images/Results/TrueElectricChaos/u_err_heatmap.png){.absolute top="130" left="220" width="550"}
+
+::: footer
+Results
+:::
+
+## Non-Isotropic Chaotic Domain
+
+![](images/Results/NonIsotropicFiberOrientationChaos/gaussian_dist_comparison.png){.absolute top="50" left="50" width="1000"}
+
+::: footer
+Results
+:::
+
+## Non-Isotropic Chaotic Domain
+
+![](images/Results/NonIsotropicFiberOrientationChaos/u_err_heatmap.png){.absolute top="50" left="220" width="600"}
+
+::: footer
+Results
+:::
+
+## Non-Isotropic Chaotic Domain
+
+![](images/Results/NonIsotropicFiberOrientationChaos/violin_plotMechanicParameters.png){.absolute top="80" left="220" width="550"}
+
+
+![](images/Results/NonIsotropicFiberOrientationChaos/violin_plotElectricParameters.png){.absolute .fragment top="380" left="220" width="550"}
+
+::: footer
+Results
+:::
+
+## Non-Isotropic Chaotic Domain
+
+![](images/Results/NonIsotropicFiberOrientationChaos/T_error_heatmap.png){.absolute top="50" left="220" width="600"}
+
+::: footer
+Results
+:::
+
+## Single Spiral
+
+![](images/Results/Spiral/u_err_heatmap.png){.absolute top="50" left="220" width="600"}
+
+::: footer
+Results
+:::
+
+## Single Spiral
+
+![](images/Results/Spiral/violin_plotMechanicParameters.png){.absolute top="80" left="220" width="550"}
+
+
+![](images/Results/Spiral/violin_plotElectricParameters.png){.absolute .fragment top="380" left="220" width="550"}
+
+::: footer
+Results
+:::
+
+## Single Spiral
+
+![](images/Results/Spiral/T_error_heatmap.png){.absolute top="50" left="220" width="600"}
+
+::: footer
+Results
+:::
+
+
+
+
+## Fast and Slow Diffusion Direction
+
+![](images/Results/D1D2IsotropicChaos/u_err_heatmap.png){.absolute top="50" left="220" width="600"}
+
+::: footer
+Results
+:::
+
+## Fast and Slow Diffusion Direction
+
+![](images/Results/D1D2IsotropicChaos/violin_plotMechanicParameters.png){.absolute top="80" left="220" width="550"}
+
+
+![](images/Results/D1D2IsotropicChaos/violin_plotElectricParameters.png){.absolute .fragment top="380" left="220" width="550"}
+
+::: footer
+Results
+:::
+
+## Fast and Slow Diffusion Direction
+
+![](images/Results/D1D2IsotropicChaos/T_error_heatmap.png){.absolute top="50" left="220" width="600"}
+
+::: footer
+Results
+:::

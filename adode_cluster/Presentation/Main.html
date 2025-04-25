@@ -141,7 +141,7 @@ Lukas Bremer
 
 </section>
 <section id="heart-function" class="slide level2">
-<h2>❤️💔Heart function</h2>
+<h2>Heart function</h2>
 <div style="display: flex; gap: 16px; justify-content: center; align-items: flex-start;">
 <div style="text-align: center;">
 <p><strong> Sinus Rhythm</strong><br> <video controls="" width="500"> <source src="videos/sinus.mp4" type="video/mp4"> </video></p>
@@ -156,9 +156,12 @@ Lukas Bremer
 <ul>
 <li class="fragment">Electric Signal → Muscle Contraction</li>
 </ul>
+<div class="footer">
+<p>Introduction ❤️💔</p>
+</div>
 </section>
 <section id="heart-function-1" class="slide level2">
-<h2>❤️💔Heart function</h2>
+<h2>Heart function</h2>
 <div style="display: flex; gap: 16px; justify-content: center; align-items: flex-start;">
 <div style="text-align: center;">
 <p><strong> </strong><br> <video width="500" height="500" controls=""> <source src="videos/sinus_mouse.mp4" type="video/mp4"> </video></p>
@@ -168,7 +171,7 @@ Lukas Bremer
 </div>
 </div>
 <div class="footer">
-<p>Introduction</p>
+<p>Introduction ❤️💔</p>
 </div>
 </section>
 <section id="goals-of-my-thesis" class="slide level2">
@@ -216,12 +219,13 @@ Lukas Bremer
 <div class="column" style="width:50%;">
 <p><img data-src="images/MakeACardiacModel/MSD_2D.png" data-bottom="15" data-rigth="15" data-left="15"></p>
 </div><div class="column" style="width:50%;">
-<div style="font-size: 60%;">
+<div style="font-size: 55%;">
 <p><span class="math display">\[\begin{align}
 \\
 \\
 \mathbf{f}_{a,i}&amp;=-k_{\mathrm{a}}\sum_j\left(\left\|\mathbf{q}_{j}-\mathbf{x}_{cm,i}\right\|-\frac{l_{f, 0}}{1+c_{f} \cdot T_{a}}\right) \cdot \mathbf{e}_{j} \eta_j \\
-&amp;= -k_{\mathrm{a}}\sum_j\left(\left\|\mathbf{q}_{j}-\mathbf{x}_{cm,i}\right\|- l_a(t)\right) \cdot \mathbf{e}_{j} \eta_j.
+&amp;= -k_{\mathrm{a}}\sum_j\left(\left\|\mathbf{q}_{j}-\mathbf{x}_{cm,i}\right\|- l_a(t)\right) \cdot \mathbf{e}_{j} \eta_j \\
+\frac{\partial T_{a}}{\partial t} &amp;= \epsilon_{T}(u) \cdot (k_{T} u - T_{a}).
 \end{align}\]</span></p>
 </div>
 </div></div>
@@ -244,15 +248,123 @@ Lukas Bremer
 <p>Methods</p>
 </div>
 </section>
-<section id="results" class="slide level2">
-<h2>Results</h2>
+<section id="isotropic-chaotic-domain" class="slide level2">
+<h2>Isotropic Chaotic Domain</h2>
+
+<img data-src="images/Results/IsotropicFiberOrientationChaos/loss_curves.png" data-bottom="15" data-rigth="15" data-left="15" data-top="200" class="r-stretch"><div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="isotropic-chaotic-domain-1" class="slide level2">
+<h2>Isotropic Chaotic Domain</h2>
+<p><img data-src="images/Results/IsotropicFiberOrientationChaos/u_err_heatmap.png" class="absolute" style="top: 50px; left: 10px; width: 600px; "></p>
+<p><img data-src="images/Results/IsotropicFiberOrientationChaos/u_mse_over_time.png" class="absolute fragment" style="top: 70px; left: 620px; width: 400px; "></p>
 <div class="footer">
 <p>Results</p>
 </div>
 </section>
-<section id="slide-background" class="slide level2" data-background="#1244aa">
-<h2>Slide Background</h2>
-<p><img data-src="images/test.jpg" class="absolute fragment" style="left: 23px; bottom: 110px; " data-rigth="12" data-fragment-index="0"></p>
+<section id="isotropic-chaotic-domain-2" class="slide level2">
+<h2>Isotropic Chaotic Domain</h2>
+<p><img data-src="images/Results/IsotropicFiberOrientationChaos/violin_plotMechanicParameters.png" class="absolute" style="top: 80px; left: 220px; width: 550px; "></p>
+<p><img data-src="images/Results/IsotropicFiberOrientationChaos/violin_plotElectricParameters.png" class="absolute fragment" style="top: 380px; left: 220px; width: 550px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="isotropic-chaotic-domain-3" class="slide level2">
+<h2>Isotropic Chaotic Domain</h2>
+<p><img data-src="images/Results/IsotropicFiberOrientationChaos/T_error_heatmap.png" class="absolute" style="top: 50px; left: 220px; width: 600px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="isotropic-chaotic-domain-4" class="slide level2">
+<h2>Isotropic Chaotic Domain</h2>
+<p>True Electric Parameters <img data-src="images/Results/TrueElectricChaos/violin_plotMechanicParameters.png" class="absolute" style="top: 130px; left: 220px; width: 550px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="isotropic-chaotic-domain-5" class="slide level2">
+<h2>Isotropic Chaotic Domain</h2>
+<p>True Electric Parameters</p>
+<p><img data-src="images/Results/TrueElectricChaos/u_err_heatmap.png" class="absolute" style="top: 130px; left: 220px; width: 550px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="non-isotropic-chaotic-domain" class="slide level2">
+<h2>Non-Isotropic Chaotic Domain</h2>
+<p><img data-src="images/Results/NonIsotropicFiberOrientationChaos/gaussian_dist_comparison.png" class="absolute" style="top: 50px; left: 50px; width: 1000px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="non-isotropic-chaotic-domain-1" class="slide level2">
+<h2>Non-Isotropic Chaotic Domain</h2>
+<p><img data-src="images/Results/NonIsotropicFiberOrientationChaos/u_err_heatmap.png" class="absolute" style="top: 50px; left: 220px; width: 600px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="non-isotropic-chaotic-domain-2" class="slide level2">
+<h2>Non-Isotropic Chaotic Domain</h2>
+<p><img data-src="images/Results/NonIsotropicFiberOrientationChaos/violin_plotMechanicParameters.png" class="absolute" style="top: 80px; left: 220px; width: 550px; "></p>
+<p><img data-src="images/Results/NonIsotropicFiberOrientationChaos/violin_plotElectricParameters.png" class="absolute fragment" style="top: 380px; left: 220px; width: 550px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="non-isotropic-chaotic-domain-3" class="slide level2">
+<h2>Non-Isotropic Chaotic Domain</h2>
+<p><img data-src="images/Results/NonIsotropicFiberOrientationChaos/T_error_heatmap.png" class="absolute" style="top: 50px; left: 220px; width: 600px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="single-spiral" class="slide level2">
+<h2>Single Spiral</h2>
+<p><img data-src="images/Results/Spiral/u_err_heatmap.png" class="absolute" style="top: 50px; left: 220px; width: 600px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="single-spiral-1" class="slide level2">
+<h2>Single Spiral</h2>
+<p><img data-src="images/Results/Spiral/violin_plotMechanicParameters.png" class="absolute" style="top: 80px; left: 220px; width: 550px; "></p>
+<p><img data-src="images/Results/Spiral/violin_plotElectricParameters.png" class="absolute fragment" style="top: 380px; left: 220px; width: 550px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="single-spiral-2" class="slide level2">
+<h2>Single Spiral</h2>
+<p><img data-src="images/Results/Spiral/T_error_heatmap.png" class="absolute" style="top: 50px; left: 220px; width: 600px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="fast-and-slow-diffusion-direction" class="slide level2">
+<h2>Fast and Slow Diffusion Direction</h2>
+<p><img data-src="images/Results/D1D2IsotropicChaos/u_err_heatmap.png" class="absolute" style="top: 50px; left: 220px; width: 600px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="fast-and-slow-diffusion-direction-1" class="slide level2">
+<h2>Fast and Slow Diffusion Direction</h2>
+<p><img data-src="images/Results/D1D2IsotropicChaos/violin_plotMechanicParameters.png" class="absolute" style="top: 80px; left: 220px; width: 550px; "></p>
+<p><img data-src="images/Results/D1D2IsotropicChaos/violin_plotElectricParameters.png" class="absolute fragment" style="top: 380px; left: 220px; width: 550px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
+</section>
+<section id="fast-and-slow-diffusion-direction-2" class="slide level2">
+<h2>Fast and Slow Diffusion Direction</h2>
+<p><img data-src="images/Results/D1D2IsotropicChaos/T_error_heatmap.png" class="absolute" style="top: 50px; left: 220px; width: 600px; "></p>
+<div class="footer">
+<p>Results</p>
+</div>
 
 </section>
     </div>
