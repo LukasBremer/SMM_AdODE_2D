@@ -174,7 +174,22 @@ Methods
 
 ## Isotropic Chaotic Domain
 
+:::: {.columns}
+
+::: {.column width="50%"}
 ![](images/Results/IsotropicFiberOrientationChaos/loss_curves.png){bottom="15" right="15" left="15" top="200"}
+:::
+
+::: {.column width="50%"}
+
+::: incremental
+- Use time interval of 225 time steps
+- Use Result as initial Condition for next run
+:::
+
+:::
+
+:::: 
 
 ::: footer
 Results
