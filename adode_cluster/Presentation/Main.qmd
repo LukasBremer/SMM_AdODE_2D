@@ -1,13 +1,13 @@
 ---
 title: "Master Thesis"
-subtitle: "Reconstructing Parameter of Cardiac Models Based on Mechanical Information."
+subtitle: "Reconstructing Parameters of Cardiac Models Based on Mechanical Information."
 author: "Lukas Bremer"
 format:
   revealjs: 
     slide-number: true
     preview-links: auto
     css: styles.css
-    footer: '[https://quarto.org](https://quarto.org)'
+    footer: 'Master Thesis Lukas Bremer'
 # embed-resources: True
 # width: 1500
 # scrollable: true
@@ -82,12 +82,12 @@ Introduction ❤️💔
 :::
 
 ::: footer
-Introduciton
+Introduction
 :::
 
-## How do we create a minmal cardiac Model?
+## How do we create a minimal cardiac Model?
 
-![](images/MakeACardiacModel/electricmechanic.png){bottom="15" rigth="50" left="50"}
+![](images/MakeACardiacModel/electricmechanic.png){bottom="15" right="50" left="50"}
 
 ::: footer
 Make a Cardiac Model
@@ -123,7 +123,7 @@ Make a Cardiac Model
 :::: {.columns}
 
 ::: {.column width="50%"}
-![](images/MakeACardiacModel/MSD_2D.png){bottom="15" rigth="15" left="15"}
+![](images/MakeACardiacModel/MSD_2D.png){bottom="15" right="15" left="15"}
 :::
 
 ::: {.column width="50%"}
@@ -162,13 +162,19 @@ Make a Cardiac Model
 
 ## AdoptODE
 
+![](images/AdoptODE/gradient_descent_3d_plot_0.png){.absolute top="100" left="20" width="1200"}
+
+![](images/AdoptODE/gradient_descent_3d_plot_1.png){.absolute .fragment top="100" left="20" width="1200"}
+
+![](images/AdoptODE/gradient_descent_3d_plot_2.png){.absolute .fragment top="100" left="20" width="1200"}
+
 ::: footer
 Methods
 :::
 
 ## Isotropic Chaotic Domain
 
-![](images/Results/IsotropicFiberOrientationChaos/loss_curves.png){bottom="15" rigth="15" left="15" top="200"}
+![](images/Results/IsotropicFiberOrientationChaos/loss_curves.png){bottom="15" right="15" left="15" top="200"}
 
 ::: footer
 Results
@@ -184,7 +190,6 @@ Results
 ::: footer
 Results
 :::
-
 
 ## Isotropic Chaotic Domain
 
@@ -285,9 +290,6 @@ Results
 Results
 :::
 
-
-
-
 ## Fast and Slow Diffusion Direction
 
 ![](images/Results/D1D2IsotropicChaos/u_err_heatmap.png){.absolute top="50" left="220" width="600"}
@@ -313,4 +315,16 @@ Results
 
 ::: footer
 Results
+:::
+
+## Conclusion
+
+::: incremental
+
+- Reconstruction of Mechanic parameters works in basic cases
+- Maybe some improvement
+- Reconstruct Electric initial conditions
+- Need accurate description of data (change of method)
+- Use other model (Finite Element)
+
 :::
