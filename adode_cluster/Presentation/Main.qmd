@@ -174,10 +174,20 @@ Methods
 
 ## Isotropic Chaotic Domain
 
+![](images/Results/IsotropicFiberOrientationChaos/dA_err_heatmap.png){.absolute top="50" left="220" width="600"}
+
+::: footer
+Results
+:::
+
+
+## Isotropic Chaotic Domain
+
 :::: {.columns}
 
 ::: {.column width="50%"}
 ![](images/Results/IsotropicFiberOrientationChaos/loss_curves.png){bottom="15" right="15" left="15" top="200"}
+
 :::
 
 ::: {.column width="50%"}
@@ -208,10 +218,18 @@ Results
 
 ## Isotropic Chaotic Domain
 
-![](images/Results/IsotropicFiberOrientationChaos/violin_plotMechanicParameters.png){.absolute top="80" left="220" width="550"}
+:::: {.columns}
 
+::: {.column width="60%"}
+![](images/Results/IsotropicFiberOrientationChaos/violin_plotMechanicParameters.png){ top="80" left="220" width="550"}
+![](images/Results/IsotropicFiberOrientationChaos/violin_plotElectricParameters.png){.fragment top="380" left="220" width="550"}
+:::
 
-![](images/Results/IsotropicFiberOrientationChaos/violin_plotElectricParameters.png){.absolute .fragment top="380" left="220" width="550"}
+::: {.column width="40%"}
+![](images/MakeACardiacModel/MSD_2D.png){ top="380" left="220" width="300"}
+:::
+
+::::
 
 ::: footer
 Results
