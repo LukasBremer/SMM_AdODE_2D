@@ -30,7 +30,6 @@
     }
   </style>
   <link rel="stylesheet" href="Main_files/libs/revealjs/dist/theme/quarto-f563837468303362081e247dddd440d0.css">
-  <link rel="stylesheet" href="styles.css">
   <link href="Main_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="Main_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="Main_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -122,6 +121,14 @@
       margin-right: 0; 
     }
   </style>
+  <style>
+    .reveal .footer {
+      font-size: 0.5em;
+    }
+    .reveal .slide-number {
+      font-size: 0.5em;
+    }
+  </style>
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -179,7 +186,7 @@ Lukas Bremer
 <ul>
 <li class="fragment">Create a (minimal) Cardiac Model</li>
 <li class="fragment">Mechanics as Observation</li>
-<li class="fragment">Reconstruct tissue properties</li>
+<li class="fragment">Reconstruct tissue properties (mechanic parameters)</li>
 <li class="fragment">Reconstruct electric signal</li>
 </ul>
 <div class="footer">
@@ -248,7 +255,7 @@ Lukas Bremer
 <p><img data-src="images/AdoptODE/gradient_descent_3d_plot_1.png" class="absolute fragment" style="top: 100px; left: 20px; width: 1200px; "></p>
 <p><img data-src="images/AdoptODE/gradient_descent_3d_plot_2.png" class="absolute fragment" style="top: 100px; left: 20px; width: 1200px; "></p>
 <div class="footer">
-<p>Methods</p>
+<p>Methods — based on <strong>Leon Lettermann et al.&nbsp;AdoptODE: […] Aug.&nbsp;2023</strong></p>
 </div>
 </section>
 <section id="isotropic-chaotic-domain" class="slide level2">
@@ -265,8 +272,8 @@ Lukas Bremer
 <p><img data-src="images/Results/IsotropicFiberOrientationChaos/loss_curves.png" data-bottom="15" data-right="15" data-left="15" data-top="200"></p>
 </div><div class="column" style="width:50%;">
 <ul>
-<li class="fragment">Use time interval of 225 time steps</li>
-<li class="fragment">Use Result as initial Condition for next run</li>
+<li class="fragment">Use a time interval of 225 time steps</li>
+<li class="fragment">Use the result as the initial condition for the next run</li>
 </ul>
 </div></div>
 <div class="footer">
@@ -365,28 +372,32 @@ Lukas Bremer
 <div class="footer">
 <p>Results</p>
 </div>
-</section>
-<section id="fast-and-slow-diffusion-direction" class="slide level2">
-<h2>Fast and Slow Diffusion Direction</h2>
-<p><img data-src="images/Results/D1D2IsotropicChaos/u_err_heatmap.png" class="absolute" style="top: 50px; left: 220px; width: 600px; "></p>
-<div class="footer">
-<p>Results</p>
-</div>
-</section>
-<section id="fast-and-slow-diffusion-direction-1" class="slide level2">
-<h2>Fast and Slow Diffusion Direction</h2>
-<p><img data-src="images/Results/D1D2IsotropicChaos/violin_plotMechanicParameters.png" class="absolute" style="top: 80px; left: 220px; width: 550px; "></p>
-<p><img data-src="images/Results/D1D2IsotropicChaos/violin_plotElectricParameters.png" class="absolute fragment" style="top: 380px; left: 220px; width: 550px; "></p>
-<div class="footer">
-<p>Results</p>
-</div>
-</section>
-<section id="fast-and-slow-diffusion-direction-2" class="slide level2">
-<h2>Fast and Slow Diffusion Direction</h2>
-<p><img data-src="images/Results/D1D2IsotropicChaos/T_error_heatmap.png" class="absolute" style="top: 50px; left: 220px; width: 600px; "></p>
-<div class="footer">
-<p>Results</p>
-</div>
+<!-- ## Fast and Slow Diffusion Directions
+
+![](images/Results/D1D2IsotropicChaos/u_err_heatmap.png){.absolute top="50" left="220" width="600"}
+
+::: footer
+Results
+:::
+
+## Fast and Slow Diffusion Directions
+
+![](images/Results/D1D2IsotropicChaos/violin_plotMechanicParameters.png){.absolute top="80" left="220" width="550"}
+
+
+![](images/Results/D1D2IsotropicChaos/violin_plotElectricParameters.png){.absolute .fragment top="380" left="220" width="550"}
+
+::: footer
+Results
+:::
+
+## Fast and Slow Diffusion Directions
+
+![](images/Results/D1D2IsotropicChaos/T_error_heatmap.png){.absolute top="50" left="220" width="600"}
+
+::: footer
+Results
+::: -->
 </section>
 <section id="conclusion" class="slide level2">
 <h2>Conclusion</h2>
