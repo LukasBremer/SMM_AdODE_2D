@@ -6,8 +6,16 @@ format:
   revealjs: 
     slide-number: true
     preview-links: auto
-    css: styles.css
     footer: 'Master Thesis Lukas Bremer'
+    header-includes: |
+      <style>
+        .reveal .footer {
+          font-size: 0.5em;
+        }
+        .reveal .slide-number {
+          font-size: 0.5em;
+        }
+      </style>
 # embed-resources: True
 # width: 1500
 # scrollable: true
@@ -77,7 +85,7 @@ Introduction ❤️💔
 ::: incremental
 -   Create a (minimal) Cardiac Model
 -   Mechanics as Observation
--   Reconstruct tissue properties
+-   Reconstruct tissue properties (mechanic parameters)
 -   Reconstruct electric signal
 :::
 
@@ -169,7 +177,7 @@ Make a Cardiac Model
 ![](images/AdoptODE/gradient_descent_3d_plot_2.png){.absolute .fragment top="100" left="20" width="1200"}
 
 ::: footer
-Methods
+Methods — based on **Leon Lettermann et al. AdoptODE: [...] Aug. 2023**
 :::
 
 ## Isotropic Chaotic Domain
@@ -193,8 +201,8 @@ Results
 ::: {.column width="50%"}
 
 ::: incremental
-- Use time interval of 225 time steps
-- Use Result as initial Condition for next run
+- Use a time interval of 225 time steps
+- Use the result as the initial condition for the next run
 :::
 
 :::
@@ -323,7 +331,7 @@ Results
 Results
 :::
 
-## Fast and Slow Diffusion Direction
+<!-- ## Fast and Slow Diffusion Directions
 
 ![](images/Results/D1D2IsotropicChaos/u_err_heatmap.png){.absolute top="50" left="220" width="600"}
 
@@ -331,7 +339,7 @@ Results
 Results
 :::
 
-## Fast and Slow Diffusion Direction
+## Fast and Slow Diffusion Directions
 
 ![](images/Results/D1D2IsotropicChaos/violin_plotMechanicParameters.png){.absolute top="80" left="220" width="550"}
 
@@ -342,13 +350,13 @@ Results
 Results
 :::
 
-## Fast and Slow Diffusion Direction
+## Fast and Slow Diffusion Directions
 
 ![](images/Results/D1D2IsotropicChaos/T_error_heatmap.png){.absolute top="50" left="220" width="600"}
 
 ::: footer
 Results
-:::
+::: -->
 
 ## Conclusion
 
