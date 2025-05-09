@@ -115,16 +115,16 @@ def sm_model(**kwargs_sys):
     return eom, loss, gen_params, gen_y0, {}
 
 # Load from HDF5
-with h5py.File('../data/SpringMassModel/MechanicalData/data_eta_var_xl.h5', 'r') as f:
-    x_temp = f['x'][:]
-    x_cm_temp = f['x_cm'][:]
+with h5py.File('../data/SpringMassModel/MechanicalData/data_eta_05_xl.h5', 'r') as f:
+    x_temp = f['x_temp'][:]
+    x_cm_temp = f['x_cm_temp'][:]
     T = f['T'][:]
     dA = f['dA'][:]
     f.close()
 print(x_temp.shape)
 print('loaded data')
 
-N,size,ls = read_config(["l_0","c_a","k_ij","k_j","k_a","m","c_damp","n_0","delta_t_m","it_m","pad"],mode='chaos')
+N,size,ls = read_config(["l_0","c_a","k_ij","k_j","k_a","m","c_damp","n_0","delta_t_m","it_m","pad"])
 N = T.shape[0]
 l_0, c_a0, k_g0, k_p0, k_a0, m0, nu0, eta0, delta_t_m, it_m, pad = ls
 eta_arr = 1 - np.load('../data/SpringMassModel/FiberOrientation/fiber_orientation.npy')
@@ -146,7 +146,8 @@ while diff < 900:
     start_indx += 1
     
     t_start = t_stop_training + 500 + maxima_temp0[max_indx] - 400
-    t_stop = t_stop_training + 500+ minima_temp0[min_indx+1] + 800
+    t_stop = t_stop_training + 500 + minima_temp0[min_indx+1] + 800
+
 # dA_test = dA[t_stop_training+500:,i,j]
 # T_test = T[t_stop_training+500:,i,j]
 # T_arr = np.array([T[:,i-1,j-1],T[:,i-1,j],T[:,i,j],T[:,i,j-1]])
@@ -174,22 +175,18 @@ for indx in range(4):
     y_out_diff = euclidean_distance_trajectory(x_fit, x_train,y_train)
 
     T_rec[indx,:] = y_out_diff
-
 t_evals = np.linspace(0,N*delta_t,N)
 t_evals = t_evals[t_start:t_stop] - t_evals[t_start]
 x_i,x_j,x_cm,l_a = shape_input_for_adoptode(x_temp[t_start:t_stop,:], x_cm_temp[t_start:t_stop,:],T[t_start:t_stop,:],i,j,1) # i and j specify the cell taken from the grid 
 x_i_dot = np.append(np.diff(x_i,axis=0),np.diff(x_i,axis=0)[-1].reshape(1,2),axis=0)/(delta_t)
 T_model = T_arr[:,t_start:t_stop]
-
 start = int((t_stop - t_start - 1000)/2)
 end = start + 1000
-
 x_i,x_j,x_cm = x_i[start:end,:],x_j[:,start:end,:],x_cm[:,start:end,:]
 x_i_dot = x_i_dot[start:end,:]
 t_evals = t_evals[start:end]
 T_model = T_model[:,start:end]
 T_rec = T_rec[:,start:end]
-
 #arrays interpolieren
 t_interp, x_cm_interp = interpolate_x(x_cm,t_evals,N_interp)
 t_interp, x_j_interp = interpolate_x(x_j,t_evals,N_interp)
@@ -237,7 +234,7 @@ t_reset_idcs = tuple([
     for i in range(int(np.ceil((len(t_evals) - 1) / reset_every)))
 ])
 
-kwargs_adoptODE = {'lr':.9e-2, 'epochs':500,'N_backups':1,
+kwargs_adoptODE = {'lr':.9e-2, 'epochs':1000,'N_backups':1,
                 #    't_reset_idcs': t_reset_idcs,
                    'lower_b_y0':{'x1':y0['x1'],'x2':y0['x2'],'y1':y0['y1']-0*y0['y1'],'y2':y0['y2']-0*y0['y2'] },
                    'upper_b_y0':{'x1':y0['x1'],'x2':y0['x2'],'y1':y0['y1']+0*y0['y1'],'y2':y0['y2']+0*y0['y2'] },
