@@ -29,12 +29,12 @@ i,j = 5 + args.i * 10 ,5 + args.j * 10
 def sm_model(**kwargs_sys):
 
     #bounds for parameters
-    nu_min, nu_max = kwargs_sys['nu_min'], kwargs_sys['nu_max']
+    c_damp_min, c_damp_max = kwargs_sys['c_damp_min'], kwargs_sys['c_damp_max']
     m_min, m_max = kwargs_sys['m_min'], kwargs_sys['m_max']
-    l_g_min, l_g_max = kwargs_sys['l_g_min'], kwargs_sys['l_g_max']
-    k_g_min, k_g_max = kwargs_sys['k_g_min'], kwargs_sys['k_g_max']
+    l_0_min, l_0_max = kwargs_sys['l_0_min'], kwargs_sys['l_0_max']
+    k_ij_min, k_ij_max = kwargs_sys['k_ij_min'], kwargs_sys['k_ij_max']
     k_a_min, k_a_max = kwargs_sys['k_a_min'], kwargs_sys['k_a_max']
-    k_p_min, k_p_max = kwargs_sys['k_p_min'], kwargs_sys['k_p_max']
+    k_j_min, k_j_max = kwargs_sys['k_j_min'], kwargs_sys['k_j_max']
     eta_min, eta_max = kwargs_sys['eta_min'], kwargs_sys['eta_max']
     c_a_min, c_a_max = kwargs_sys['c_a_min'], kwargs_sys['c_a_max']
     
@@ -58,24 +58,24 @@ def sm_model(**kwargs_sys):
         # seed for reproducibility
         #np.random.seed(0)
 
-        nu = nu_min + (nu_max - nu_min) * np.random.rand()
+        c_damp = c_damp_min + (c_damp_max - c_damp_min) * np.random.rand()
         m = m_min + (m_max - m_min) * np.random.rand()
 
-        l_g = l_g_min + (l_g_max - l_g_min) * np.random.rand()
+        l_0 = l_0_min + (l_0_max - l_0_min) * np.random.rand()
         # l_ax = l_ax_min + (l_ax_max - l_ax_min) * np.random.rand()
 
         c_a = c_a_min + (c_a_max - c_a_min) * np.random.rand()
         
-        k_g = k_g_min + (k_g_max - k_g_min) * np.random.rand()
+        k_ij = k_ij_min + (k_ij_max - k_ij_min) * np.random.rand()
         k_a = k_a_min + (k_a_max - k_a_min) * np.random.rand()
-        k_p = k_p_min + (k_p_max - k_p_min) * np.random.rand()
+        k_j = k_j_min + (k_j_max - k_j_min) * np.random.rand()
         
         eta0 = eta_min + (eta_max - eta_min) * np.random.rand()
         eta1 = eta_min + (eta_max - eta_min) * np.random.rand()
         eta2 = eta_min + (eta_max - eta_min) * np.random.rand()
         eta3 = eta_min + (eta_max - eta_min) * np.random.rand()
 
-        return {'nu':nu,'m':m,'l_g':l_g,'k_g':k_g, 'k_a':k_a,'k_p':k_p, 'eta0':eta0 ,'eta1':eta1,'eta2':eta2,'eta3':eta3,'c_a':c_a}, {}, {}
+        return {'c_damp':c_damp,'m':m,'l_0':l_0,'k_ij':k_ij, 'k_a':k_a,'k_j':k_j, 'eta0':eta0 ,'eta1':eta1,'eta2':eta2,'eta3':eta3,'c_a':c_a}, {}, {}
 
         
     @jit
@@ -93,8 +93,8 @@ def sm_model(**kwargs_sys):
         #initialize eom
         dx1 = xy['y1']
         dx2 = xy['y2']
-        dy1 = 1/params['m'] * (f[0] - params['nu'] * xy['y1'])
-        dy2 = 1/params['m'] * (f[1] - params['nu'] * xy['y2'])
+        dy1 = 1/params['m'] * (f[0] - params['c_damp'] * xy['y1'])
+        dy2 = 1/params['m'] * (f[1] - params['c_damp'] * xy['y2'])
 
         return {'x1':dx1, 'x2':dx2, 'y1':dy1, 'y2':dy2}
 
@@ -126,10 +126,10 @@ print('loaded data')
 
 N,size,ls = read_config(["l_0","c_a","k_ij","k_j","k_a","m","c_damp","n_0","delta_t_m","it_m","pad"])
 N = T.shape[0]
-l_0, c_a0, k_g0, k_p0, k_a0, m0, nu0, eta0, delta_t_m, it_m, pad = ls
+l_0, c_a0, k_ij0, k_j0, k_a0, m0, c_damp0, eta0, delta_t_m, it_m, pad = ls
 eta_arr = 1 - np.load('../data/SpringMassModel/FiberOrientation/fiber_orientation.npy')
 eta0,eta1,eta2,eta3= eta_arr[i-1,j-1],eta_arr[i-1,j],eta_arr[i,j],eta_arr[i,j-1]
-real_params = {'l_g':l_0,'k_g':k_g0,'k_p':k_p0,'k_a':k_a0,'m':m0,'nu':nu0,'eta0':eta0,'eta1':eta1,'eta2':eta2,'eta3':eta3,'c_a': c_a0 }#,'dt':0}
+real_params = {'l_0':l_0,'k_ij':k_ij0,'k_j':k_j0,'k_a':k_a0,'m':m0,'c_damp':c_damp0,'eta0':eta0,'eta1':eta1,'eta2':eta2,'eta3':eta3,'c_a': c_a0 }#,'dt':0}
 delta_t = delta_t_m * it_m
 t_evals = np.linspace(0,N*delta_t,N)
 N_interp = int(it_m)*5
@@ -198,11 +198,11 @@ print('time interval='+str(t_start)+'-'+str(t_stop))
 
 rel_err = 1        
 kwargs_sys = { 
-    'nu_min': nu0 - nu0 *rel_err,'nu_max': nu0 + nu0 *rel_err,
+    'c_damp_min': c_damp0 - c_damp0 *rel_err,'c_damp_max': c_damp0 + c_damp0 *rel_err,
     'm_min': m0 - m0 *rel_err,'m_max' : m0 + m0 *rel_err,
-    'l_g_min': l_0 - l_0 *rel_err,'l_g_max': l_0 + l_0 *rel_err,
-    'k_g_min': k_g0 - k_g0 *rel_err,'k_g_max': k_g0 + k_g0 *rel_err,
-    'k_p_min': k_p0 - k_p0 *rel_err,'k_p_max': k_p0 + k_p0 *rel_err,
+    'l_0_min': l_0 - l_0 *rel_err,'l_0_max': l_0 + l_0 *rel_err,
+    'k_ij_min': k_ij0 - k_ij0 *rel_err,'k_ij_max': k_ij0 + k_ij0 *rel_err,
+    'k_j_min': k_j0 - k_j0 *rel_err,'k_j_max': k_j0 + k_j0 *rel_err,
     'k_a_min': k_a0 - k_a0 *rel_err,'k_a_max': k_a0 + k_a0 *rel_err,
     'c_a_min': c_a0 - c_a0 *rel_err,'c_a_max': c_a0 + c_a0 *rel_err,
     'eta_min': 0,'eta_max': 1,
@@ -220,12 +220,12 @@ kwargs_sys = {
 
 #upper and lower bounds for parameters
 tol = 1
-real_params_low = {'l_g':l_0- l_0*tol,
-                   'k_g':k_g0- k_g0*tol,'k_p':k_p0- k_p0*tol,
-                   'k_a':k_a0- k_a0*tol,'m':m0- m0*tol,'nu':nu0- nu0*tol,'c_a': c_a0 - c_a0*tol ,'eta0':0,'eta1':0,'eta2':0,'eta3':0}
-real_params_up = {'l_g':l_0+ l_0*tol,
-                  'k_g':k_g0+ k_g0*tol,'k_p':k_p0+ k_p0*tol,
-                  'k_a':k_a0+ k_a0*tol,'m':m0+ m0*tol,'nu':nu0+ nu0*tol,'c_a': c_a0 + c_a0*tol ,'eta':1,'eta1':1,'eta2':1,'eta3':1}
+real_params_low = {'l_0':l_0- l_0*tol,
+                   'k_ij':k_ij0- k_ij0*tol,'k_j':k_j0- k_j0*tol,
+                   'k_a':k_a0- k_a0*tol,'m':m0- m0*tol,'c_damp':c_damp0- c_damp0*tol,'c_a': c_a0 - c_a0*tol ,'eta0':0,'eta1':0,'eta2':0,'eta3':0}
+real_params_up = {'l_0':l_0+ l_0*tol,
+                  'k_ij':k_ij0+ k_ij0*tol,'k_j':k_j0+ k_j0*tol,
+                  'k_a':k_a0+ k_a0*tol,'m':m0+ m0*tol,'c_damp':c_damp0+ c_damp0*tol,'c_a': c_a0 + c_a0*tol ,'eta':1,'eta1':1,'eta2':1,'eta3':1}
 
 targets = {"x1":x_i[:,0].reshape((1,len(x_i[:,0]))),'x2':x_i[:,1].reshape((1,len(x_i[:,0]))),'y1':x_i_dot[:,0].reshape((1,len(x_i_dot[:,0]))),'y2':x_i_dot[:,1].reshape((1,len(x_i_dot[:,1])))}
 reset_every = 300
@@ -259,6 +259,10 @@ for _ in range(3):
     if float(losses[-1][0]) < loss:
         eta_arr[args.i,args.j,0] = dataset.params_train
         eta_arr[args.i,args.j,1] = float(losses[-1][0])
+        eta_arr[args.i,args.j,2] = params_history
+        eta_arr[args.i,args.j,3] = losses
+        eta_arr[args.i,args.j,4] = errors
+        
         loss = float(losses[-1][0])
 
     np.save('../data/SpringMassModel/EtaSweep/eta_sweep'+args.nr+'.npy',eta_arr)
