@@ -234,7 +234,7 @@ t_reset_idcs = tuple([
     for i in range(int(np.ceil((len(t_evals) - 1) / reset_every)))
 ])
 
-kwargs_adoptODE = {'lr':.9e-2, 'epochs':1000,'N_backups':1,
+kwargs_adoptODE = {'lr':.9e-2, 'epochs':2000,'N_backups':4,
                 #    't_reset_idcs': t_reset_idcs,
                    'lower_b_y0':{'x1':y0['x1'],'x2':y0['x2'],'y1':y0['y1']-0*y0['y1'],'y2':y0['y2']-0*y0['y2'] },
                    'upper_b_y0':{'x1':y0['x1'],'x2':y0['x2'],'y1':y0['y1']+0*y0['y1'],'y2':y0['y2']+0*y0['y2'] },
@@ -255,14 +255,17 @@ for _ in range(3):
     params_final, losses, errors, params_history = train_adoptODE(dataset,save_interval=100)
     eta_local = np.array([float(dataset.params_train['eta0']),float(dataset.params_train['eta1']),float(dataset.params_train['eta2']),float(dataset.params_train['eta3'])])
     eta_arr = np.load('../data/SpringMassModel/EtaSweep/eta_sweep'+args.nr+'.npy',allow_pickle=True)
-    
+    print(eta_arr)
     if float(losses[-1][0]) < loss:
+        print('test')
         eta_arr[args.i,args.j,0] = dataset.params_train
+        print('test0')
         eta_arr[args.i,args.j,1] = float(losses[-1][0])
+        print('test1')
         eta_arr[args.i,args.j,2] = params_history
+        print('test2')
         eta_arr[args.i,args.j,3] = losses
-        eta_arr[args.i,args.j,4] = errors
-        
+        print('test3')
         loss = float(losses[-1][0])
 
     np.save('../data/SpringMassModel/EtaSweep/eta_sweep'+args.nr+'.npy',eta_arr)
