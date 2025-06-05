@@ -45,12 +45,12 @@ def total_force(x, x_j, x_cm, l_a, t, params):
 def grid_force(x,x_j,params):
     """defines the force that is given by the grid of the system"""
     local_force = jnp.zeros(2)
-    k_g = params['k_g']
-    l_g = params['l_g']
+    k_ij = params['k_ij']
+    l_0 = params['l_0']
 
     for i in range(4):
-        #local_force = local_force.at[:].set(local_force + f_ij(x, x_j[i,:], k_g, l_g)) 
-        local_force += f_ij(x, x_j[i,:], k_g, l_g)
+        #local_force = local_force.at[:].set(local_force + f_ij(x, x_j[i,:], k_ij, l_0)) 
+        local_force += f_ij(x, x_j[i,:], k_ij, l_0)
         
     return local_force
 
@@ -63,14 +63,14 @@ def axial_force_p(x, x_j, x_cm, params):
     eta2 = params['eta2']
     eta3 = params['eta3']
 
-    k_p = params['k_p']
+    k_j = params['k_j']
     l_p =  ((jnp.array([params['eta0'],params['eta1'],params['eta2'],params['eta3']])-1/2)**2+1/2**2)**(1/2)
     q_j = interpolate_q_p(x_j, x, params)
 
-    local_force += f_ij(q_j[0,:], x_cm[0,:], k_p, l_p[0])*(1-eta0)
-    local_force += f_ij(q_j[1,:], x_cm[3,:], k_p, l_p[3])*(eta3)
-    local_force += f_ij(q_j[2,:], x_cm[1,:], k_p, l_p[1])*(eta1)
-    local_force += f_ij(q_j[3,:], x_cm[2,:], k_p, l_p[2])*(1-eta2)
+    local_force += f_ij(q_j[0,:], x_cm[0,:], k_j, l_p[0])*(1-eta0)
+    local_force += f_ij(q_j[1,:], x_cm[3,:], k_j, l_p[3])*(eta3)
+    local_force += f_ij(q_j[2,:], x_cm[1,:], k_j, l_p[1])*(eta1)
+    local_force += f_ij(q_j[3,:], x_cm[2,:], k_j, l_p[2])*(1-eta2)
 
     return local_force
     
@@ -171,8 +171,8 @@ def sm_eom(xy, t, params,x_cm_interp,x_j_interp,l_a_interp,t_interp):
     #initialize eom
     dx1 = xy['y1']
     dx2 = xy['y2']
-    dy1 = 1/params['m'] * (f[0] - params['nu'] * xy['y1'])
-    dy2 = 1/params['m'] * (f[1] - params['nu'] * xy['y2'])
+    dy1 = 1/params['m'] * (f[0] - params['c_damp'] * xy['y1'])
+    dy2 = 1/params['m'] * (f[1] - params['c_damp'] * xy['y2'])
 
     return {'x1':dx1, 'x2':dx2, 'y1':dy1, 'y2':dy2,'f_x':f[0]}
 
@@ -193,12 +193,12 @@ def euler(xy0,iterations,real_params,x_cm_interp,x_j_interp,l_a_interp,t_interp,
 def sm_model(**kwargs_sys):
 
     #bounds for parameters
-    nu_min, nu_max = kwargs_sys['nu_min'], kwargs_sys['nu_max']
+    c_damp_min, c_damp_max = kwargs_sys['c_damp_min'], kwargs_sys['c_damp_max']
     m_min, m_max = kwargs_sys['m_min'], kwargs_sys['m_max']
-    l_g_min, l_g_max = kwargs_sys['l_g_min'], kwargs_sys['l_g_max']
-    k_g_min, k_g_max = kwargs_sys['k_g_min'], kwargs_sys['k_g_max']
+    l_0_min, l_0_max = kwargs_sys['l_0_min'], kwargs_sys['l_0_max']
+    k_ij_min, k_ij_max = kwargs_sys['k_ij_min'], kwargs_sys['k_ij_max']
     k_a_min, k_a_max = kwargs_sys['k_a_min'], kwargs_sys['k_a_max']
-    k_p_min, k_p_max = kwargs_sys['k_p_min'], kwargs_sys['k_p_max']
+    k_j_min, k_j_max = kwargs_sys['k_j_min'], kwargs_sys['k_j_max']
     eta_min, eta_max = kwargs_sys['eta_min'], kwargs_sys['eta_max']
     c_a_min, c_a_max = kwargs_sys['c_a_min'], kwargs_sys['c_a_max']
     
@@ -222,24 +222,24 @@ def sm_model(**kwargs_sys):
         # seed for reproducibility
         #np.random.seed(0)
 
-        nu = nu_min + (nu_max - nu_min) * np.random.rand()
+        c_damp = c_damp_min + (c_damp_max - c_damp_min) * np.random.rand()
         m = m_min + (m_max - m_min) * np.random.rand()
 
-        l_g = l_g_min + (l_g_max - l_g_min) * np.random.rand()
+        l_0 = l_0_min + (l_0_max - l_0_min) * np.random.rand()
         # l_ax = l_ax_min + (l_ax_max - l_ax_min) * np.random.rand()
 
         c_a = c_a_min + (c_a_max - c_a_min) * np.random.rand()
         
-        k_g = k_g_min + (k_g_max - k_g_min) * np.random.rand()
+        k_ij = k_ij_min + (k_ij_max - k_ij_min) * np.random.rand()
         k_a = k_a_min + (k_a_max - k_a_min) * np.random.rand()
-        k_p = k_p_min + (k_p_max - k_p_min) * np.random.rand()
+        k_j = k_j_min + (k_j_max - k_j_min) * np.random.rand()
         
         eta0 = eta_min + (eta_max - eta_min) * np.random.rand()
         eta1 = eta_min + (eta_max - eta_min) * np.random.rand()
         eta2 = eta_min + (eta_max - eta_min) * np.random.rand()
         eta3 = eta_min + (eta_max - eta_min) * np.random.rand()
 
-        return {'nu':nu,'m':m,'l_g':l_g,'k_g':k_g, 'k_a':k_a,'k_p':k_p, 'eta0':eta0 ,'eta1':eta1,'eta2':eta2,'eta3':eta3,'c_a':c_a}, {}, {}
+        return {'c_damp':c_damp,'m':m,'l_0':l_0,'k_ij':k_ij, 'k_a':k_a,'k_j':k_j, 'eta0':eta0 ,'eta1':eta1,'eta2':eta2,'eta3':eta3,'c_a':c_a}, {}, {}
 
         
     @jit
@@ -257,8 +257,8 @@ def sm_model(**kwargs_sys):
         #initialize eom
         dx1 = xy['y1']
         dx2 = xy['y2']
-        dy1 = 1/params['m'] * (f[0] - params['nu'] * xy['y1'])
-        dy2 = 1/params['m'] * (f[1] - params['nu'] * xy['y2'])
+        dy1 = 1/params['m'] * (f[0] - params['c_damp'] * xy['y1'])
+        dy2 = 1/params['m'] * (f[1] - params['c_damp'] * xy['y2'])
 
         return {'x1':dx1, 'x2':dx2, 'y1':dy1, 'y2':dy2}
 
